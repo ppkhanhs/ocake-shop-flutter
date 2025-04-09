@@ -1,20 +1,25 @@
-import 'package:app_ocake/views/client/screens/cart_screen.dart';
-import 'package:app_ocake/views/client/screens/checkout_screen.dart';
+import 'package:app_ocake/views/admin/screens/manage_products_screen.dart';
+import 'package:app_ocake/views/client/screens/home_screen.dart';
+import 'package:app_ocake/views/client/screens/login_screen.dart';
+import 'package:app_ocake/views/client/screens/profile_screen.dart';
+import 'package:app_ocake/views/client/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MainApp());
+  runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
   @override
   Widget build(BuildContext context) {
-    return  MaterialApp(
-      title: 'Media Picker App',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: CartScreen()
-      ); 
+    return MaterialApp(
+      title: 'OCake - Ứng dụng đặt bánh trong ngày',
+      theme: ThemeData(
+        primarySwatch: Colors.pink,
+        fontFamily: 'Roboto',
+      ),
+      home: ProfileScreen(),
+      debugShowCheckedModeBanner: false,
+    );
   }
 }
