@@ -1,3 +1,4 @@
+import 'package:app_ocake/views/client/screens/profile_screen.dart';
 import 'package:app_ocake/views/admin/screens/manage_products_screen.dart';
 import 'package:app_ocake/views/client/screens/home_screen.dart';
 import 'package:app_ocake/views/client/screens/login_screen.dart';
@@ -14,11 +15,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'OCake - Ứng dụng đặt bánh trong ngày',
-      theme: ThemeData(
-        primarySwatch: Colors.pink,
-        fontFamily: 'Roboto',
-      ),
-      home: ProfileScreen(),
+      theme: ThemeData(primarySwatch: Colors.pink, fontFamily: 'Roboto'),
+      home: LoginScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

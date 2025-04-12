@@ -16,6 +16,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool isConfirmPasswordVisible = false;
 
   @override
+  void dispose() {
+    usernameController.dispose();
+    phoneController.dispose();
+    passwordController.dispose();
+    confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _register() {
+    final username = usernameController.text.trim();
+    final phone = phoneController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    if (username.isEmpty ||
+        phone.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vui lòng điền đầy đủ thông tin."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Mật khẩu xác nhận không khớp."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("Đăng ký thành công!"),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context); // Quay lại trang đăng nhập
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
@@ -38,7 +89,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 const SizedBox(height: 20),
 
-                // Logo và tiêu đề
                 Center(
                   child: Column(
                     children: [
@@ -164,7 +214,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   ),
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _register,
                     child: const Text(
                       "SIGN UP",
                       style: TextStyle(color: Colors.white, fontSize: 16),

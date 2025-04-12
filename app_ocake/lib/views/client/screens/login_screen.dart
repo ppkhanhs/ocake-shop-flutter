@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'home_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,6 +13,27 @@ class _LoginScreenState extends State<LoginScreen> {
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   bool isPasswordVisible = false;
+
+  void _login() {
+    final phone = phoneController.text.trim();
+    final password = passwordController.text;
+
+    if (phone.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Vui lòng điền đầy đủ thông tin."),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Giả sử đăng nhập thành công
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomeScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 Center(
                   child: Column(
                     children: [
@@ -56,9 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 40),
-
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
@@ -73,9 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
                 TextField(
                   controller: passwordController,
                   obscureText: !isPasswordVisible,
@@ -102,9 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -112,9 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: const Text("Forgot your password?"),
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Container(
                   width: double.infinity,
                   height: 50,
@@ -125,16 +137,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   child: TextButton(
-                    onPressed: () {},
+                    onPressed: _login,
                     child: const Text(
                       "LOG IN",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
                 Row(
                   children: const [
                     Expanded(child: Divider()),
@@ -145,9 +155,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(child: Divider()),
                   ],
                 ),
-
                 const SizedBox(height: 16),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -168,9 +176,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
