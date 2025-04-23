@@ -16,12 +16,17 @@ class OrderHistoryScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Order History',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Đơn hàng',
+          style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.deepOrangeAccent,
-        leading: IconButton(icon: const Icon(Icons.menu), onPressed: () {}),
+        backgroundColor: Colors.green,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
       ),
       body: Container(
         padding: const EdgeInsets.all(16.0),
@@ -36,50 +41,47 @@ class OrderHistoryScreen extends StatelessWidget {
   }
 
   Widget buildOrderHistoryItem(BuildContext context, String orderId) {
-    return Row(
-      children: [
-        Image.asset("assets/demo/cake.png", width: 50, height: 50),
-        const SizedBox(width: 10),
-        Expanded(
-          child: ListTile(
-            title: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    "Order #$orderId",
-                    overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const OrderHistoryDetailScreen(),
+          ),
+        );
+      },
+      child: Row(
+        children: [
+          Image.asset("assets/images/cake.png", width: 50, height: 50),
+          const SizedBox(width: 10),
+          Expanded(
+            child: ListTile(
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      "Mã đơn hàng #$orderId",
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                ],
+              ),
+              subtitle: Text(
+                "04/10/2023",
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+              trailing: Text(
+                "\120.000đ",
+                style: const TextStyle(
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14
                 ),
-                const SizedBox(width: 10),
-                Text(
-                  "\$29.00",
-                  style: TextStyle(
-                    color: Colors.deepOrangeAccent,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-
-            subtitle: Text(
-              "04/10/2023",
-              style: TextStyle(color: Colors.grey, fontSize: 12),
-            ),
-            trailing: IconButton(
-              icon: const Icon(Icons.arrow_forward),
-              onPressed: () {
-                // Navigate to order details screen
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OrderHistoryDetailScreen(),
-                  ),
-                );
-              },
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

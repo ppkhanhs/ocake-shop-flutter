@@ -8,11 +8,11 @@ class OrderHistoryDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Order Details',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          'Chi tiết đơn hàng',
+          style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.deepOrangeAccent,
+        backgroundColor: Colors.green,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -24,38 +24,36 @@ class OrderHistoryDetailScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Status Order
             buildStatusOrder("#2221", "Đã giao hàng"),
             Divider(),
-            //Detail Order
-            SizedBox(height: 30,),
+            SizedBox(height: 30),
             Expanded(
               child: ListView(
                 children: [
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
-                  buildDetailItem("assets/demo/cake.png", "Cake", "\$9.00"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
+                  buildDetailItem("assets/images/cake.png", "Cake", "\25.000đ"),
                 ],
               ),
             ),
             const Divider(),
             ListTile(
               title: const Text(
-                "Total",
+                "Tổng tiền",
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               trailing: const Text(
-                "\$63.00",
+                "\275.000đ",
                 style: TextStyle(
-                  color: Colors.deepOrangeAccent,
+                  color: Colors.green,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),
@@ -64,11 +62,11 @@ class OrderHistoryDetailScreen extends StatelessWidget {
             TextButton(
               onPressed: () {},
               child: Container(
-                
-                padding: const EdgeInsets.all(15),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.deepOrangeAccent,
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.green,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.2),
@@ -77,9 +75,10 @@ class OrderHistoryDetailScreen extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: Text(
+                child: const Text(
                   "Đặt lại",
-                  style: TextStyle(fontSize: 25, color: Colors.white),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, color: Colors.white, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -142,7 +141,7 @@ class OrderHistoryDetailScreen extends StatelessWidget {
               trailing: Text(
                 value,
                 style: const TextStyle(
-                  color: Colors.deepOrangeAccent,
+                  color: Colors.green,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                 ),

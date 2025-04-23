@@ -13,8 +13,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'OCake - Ứng dụng đặt bánh trong ngày',
-      theme: ThemeData(primarySwatch: Colors.pink, fontFamily: 'Roboto'),
+      title: 'Hỷ Lâm Môn',
+      theme: ThemeData(primarySwatch: Colors.green, fontFamily: 'Roboto'),
       home: LoginScreen(),
       debugShowCheckedModeBanner: false,
     );

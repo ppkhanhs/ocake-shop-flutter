@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_detail_screen.dart';
+import 'order_history_screen.dart';
 import '../widgets/product_card.dart';
 import '../../admin/screens/manage_products_screen.dart';
 
@@ -11,19 +12,116 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  String _selectedBranch = 'Hỷ Lâm Môn Nguyễn Trãi';
+
+  final List<Map<String, String>> _branches = [
+    {
+      'name': 'Hỷ Lâm Môn Nguyễn Trãi',
+      'address': '548 – 550 Nguyễn Trãi, P.8, Q.5, Tp.HCM',
+    },
+    {
+      'name': 'Hỷ Lâm Môn Âu Cơ',
+      'address': '29 – 31 Âu Cơ, P.14, Q.11, Tp.HCM',
+    },
+    {
+      'name': 'Hỷ Lâm Môn Hoàng Diệu',
+      'address': '315 Hoàng Diệu, P.6, Q.4, Tp.HCM',
+    },
+    {
+      'name': 'Hỷ Lâm Môn Trần Hưng Đạo',
+      'address': '99 Trần Hưng Đạo, Q.1, Tp.HCM',
+    },
+    {
+      'name': 'Hỷ Lâm Môn Võ Văn Kiệt',
+      'address': '12 Võ Văn Kiệt, Q.5, Tp.HCM',
+    },
+  ];
+
   int _currentIndex = 0;
 
   final List<Widget> _screens = [
     HomeContent(),
     CartScreen(),
-    DealsScreen(),
+    OrderHistoryScreen(),
     ProfileScreen(),
   ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      appBar: AppBar(
+        backgroundColor: Colors.green,
+        elevation: 0,
+        title: Row(
+          children: [
+            const Icon(Icons.location_on, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<Map<String, String>>(
+                  value: _branches.firstWhere(
+                    (branch) => branch['address'] == _selectedBranch,
+                    orElse: () => _branches.first,
+                  ),
+                  dropdownColor: Colors.green,
+                  icon: const Icon(Icons.menu, color: Colors.white),
+                  style: const TextStyle(color: Colors.black, fontSize: 14),
+                  onChanged: (Map<String, String>? newValue) {
+                    setState(() {
+                      _selectedBranch = newValue!['address']!;
+                    });
+                  },
+                  items: _branches.map<DropdownMenuItem<Map<String, String>>>((branch) {
+                    return DropdownMenuItem<Map<String, String>>(
+                      value: branch,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            branch['name']!,
+                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 19)
+                          ),
+                          Text(
+                            branch['address']!,
+                            style: const TextStyle(color: Colors.white, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      body: Column(
+        children: [
+          // Thanh tìm kiếm
+          Container(
+            color: Colors.green,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(30),
+              ),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Bạn đang thèm món bánh gì?',
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+              ),
+            ),
+          ),
+          // Các phần khác (giữ nguyên)
+          Expanded(
+            child: _screens[_currentIndex],
+          ),
+        ],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -120,29 +218,10 @@ class HomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Trang chủ'),
-      ),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Bạn đang thèm món bánh gì?',
-                  prefixIcon: Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(30),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
-
             SizedBox(height: 12),
 
             Padding(
@@ -310,23 +389,6 @@ class HomeContent extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class DealsScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Ưu đãi'),
-      ),
-      body: Center(
-        child: const Text(
-          'Trang ưu đãi',
-          style: TextStyle(fontSize: 18),
         ),
       ),
     );
