@@ -7,28 +7,27 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // Sample cart items with images
   List<Map<String, dynamic>> cartItems = [
     {
       'name': 'Chocolate Cake',
       'price': 50000,
       'quantity': 1,
       'selected': false,
-      'image': 'assets/images/cake-1.jpg'
+      'image': 'assets/images/cake.png'
     },
     {
       'name': 'Vanilla Cupcake',
       'price': 35000,
       'quantity': 2,
       'selected': false,
-      'image': 'assets/images/cake-1.jpg'
+      'image': 'assets/images/cake.png'
     },
     {
       'name': 'Strawberry Tart',
       'price': 12000,
       'quantity': 1,
       'selected': false,
-      'image': 'assets/images/cake-1.jpg'
+      'image': 'assets/images/cake.png'
     },
   ];
 
@@ -148,21 +147,41 @@ class _CartScreenState extends State<CartScreen> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(
-                  'Tổng tiền: ${calculateTotal()}đ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Tổng tiền:',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      '${calculateTotal()}đ',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 16),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => CheckoutScreen()),
                     );
                   },
-                  child: Text('Thanh toán'),
+                  child: const Text(
+                    'Tiến hành thanh toán',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
                 ),
               ],
             ),

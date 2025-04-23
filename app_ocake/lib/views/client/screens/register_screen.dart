@@ -92,19 +92,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Center(
                   child: Column(
                     children: [
-                      Image.asset('assets/images/logo.jpg', height: 80),
+                      Image.asset('assets/images/logo_hylammon.png', height: 80),
                       const SizedBox(height: 16),
                       const Text(
-                        "Sign Up",
+                        "Đăng ký",
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Colors.pink,
+                          color: Colors.green,
                         ),
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        "Welcome to our sign up page",
+                        "Chào mừng bạn đến với Hỷ Lâm Môn",
                         style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
                     ],
@@ -117,7 +117,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: usernameController,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.person),
-                    hintText: "Username",
+                    hintText: "Họ và tên",
                     filled: true,
                     fillColor: Colors.grey[200],
                     border: OutlineInputBorder(
@@ -134,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   keyboardType: TextInputType.phone,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.phone),
-                    hintText: "Phone Number",
+                    hintText: "Số điện thoại",
                     filled: true,
                     fillColor: Colors.grey[200],
                     border: OutlineInputBorder(
@@ -151,7 +151,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: !isPasswordVisible,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock),
-                    hintText: "Password",
+                    hintText: "Mật khẩu",
                     filled: true,
                     fillColor: Colors.grey[200],
                     border: OutlineInputBorder(
@@ -180,7 +180,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   obscureText: !isConfirmPasswordVisible,
                   decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.lock_outline),
-                    hintText: "Confirm Password",
+                    hintText: "Nhập lại mật khẩu",
                     filled: true,
                     fillColor: Colors.grey[200],
                     border: OutlineInputBorder(
@@ -210,13 +210,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     gradient: const LinearGradient(
-                      colors: [Colors.pink, Colors.orange],
+                      colors: [Colors.green, Colors.lightGreen],
                     ),
                   ),
                   child: TextButton(
                     onPressed: _register,
                     child: const Text(
-                      "SIGN UP",
+                      "Đăng ký",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -228,14 +228,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Already have an account? "),
+                      const Text("Bạn đã có tài khoản rồi hả?"),
                       TextButton(
                         onPressed: () {
                           Navigator.pop(context);
                         },
                         child: const Text(
-                          "Sign In",
-                          style: TextStyle(color: Colors.pink),
+                          "Đăng nhập",
+                          style: TextStyle(color: Colors.green),
                         ),
                       ),
                     ],

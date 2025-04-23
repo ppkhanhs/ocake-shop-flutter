@@ -21,8 +21,11 @@ class OrderConfirmationScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Xác nhận đơn hàng'),
-        backgroundColor: Colors.blueAccent,
+        title: const Text(
+          'Xác nhận đơn hàng',
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.green,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -32,20 +35,28 @@ class OrderConfirmationScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Icon(Icons.check_circle, color: Colors.green, size: 100),
-              ),
-              SizedBox(height: 20),
-              Center(
-                child: Text(
-                  'Đặt hàng thành công!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                child: Column(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.green, size: 100),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Đặt hàng thành công!',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Cảm ơn bạn đã mua hàng tại Hỷ Lâm Môn',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -56,37 +67,117 @@ class OrderConfirmationScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('🧾 Mã đơn hàng: $orderId',
-                          style: TextStyle(fontSize: 16)),
-                      SizedBox(height: 12),
-                      Text('👤 Khách hàng: $name', style: TextStyle(fontSize: 16)),
-                      Text('📞 SĐT: $phone', style: TextStyle(fontSize: 16)),
-                      Text('🏠 Địa chỉ: $address', style: TextStyle(fontSize: 16)),
-                      SizedBox(height: 12),
-                      Text('💳 Phương thức thanh toán: $paymentMethod',
-                          style: TextStyle(fontSize: 16)),
-                      SizedBox(height: 12),
-                      Text('💰 Tổng tiền: $totalAmount đ',
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold)),
+                      const Text(
+                        'Thông tin đơn hàng',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.receipt, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Mã đơn hàng: $orderId',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.person, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Khách hàng: $name',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.phone, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'SĐT: $phone',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Địa chỉ: $address',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.payment, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Phương thức thanh toán: $paymentMethod',
+                              style: const TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Icon(Icons.attach_money, color: Colors.green),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Tổng tiền: $totalAmount đ',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 30),
+              const SizedBox(height: 30),
               Center(
-                child: ElevatedButton(
+                child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    backgroundColor: Colors.blueAccent,
+                    backgroundColor: Colors.green,
                   ),
                   onPressed: () {
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
-                  child: Text(
+                  icon: const Icon(Icons.home, color: Colors.white),
+                  label: const Text(
                     'Về trang chính',
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),

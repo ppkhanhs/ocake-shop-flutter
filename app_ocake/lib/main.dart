@@ -2,7 +2,6 @@ import 'package:app_ocake/views/client/screens/profile_screen.dart';
 import 'package:app_ocake/views/admin/screens/manage_products_screen.dart';
 import 'package:app_ocake/views/client/screens/home_screen.dart';
 import 'package:app_ocake/views/client/screens/login_screen.dart';
-import 'package:app_ocake/views/client/screens/profile_screen.dart';
 import 'package:app_ocake/views/client/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 

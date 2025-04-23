@@ -1,39 +1,38 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
-import 'register_screen.dart';
-import 'forgotpassword_screen.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final phoneController = TextEditingController();
-  final passwordController = TextEditingController();
-  bool isPasswordVisible = false;
 
-  void _login() {
+  void _sendResetLink() {
     final phone = phoneController.text.trim();
-    final password = passwordController.text;
 
-    if (phone.isEmpty || password.isEmpty) {
+    if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("Vui lòng điền đầy đủ thông tin."),
+          content: Text("Vui lòng nhập số điện thoại."),
           backgroundColor: Colors.red,
         ),
       );
       return;
     }
 
-    // Giả sử đăng nhập thành công
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("OTP đã được gửi đến số điện thoại của bạn."),
+        backgroundColor: Colors.green,
+      ),
     );
+
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pop(context);
+    });
   }
 
   @override
@@ -49,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.topLeft,
                   child: IconButton(
-                    icon: const Icon(Icons.close),
+                    icon: const Icon(Icons.arrow_back),
                     onPressed: () {
                       Navigator.pop(context);
                     },
@@ -62,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Image.asset('assets/images/logo_hylammon.png', height: 80),
                       const SizedBox(height: 16),
                       const Text(
-                        "Đăng nhập",
+                        "Quên mật khẩu",
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -71,8 +70,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        "Chào mừng bạn đến với Hỷ Lâm Môn",
+                        "Nhập số điện thoại để đặt lại mật khẩu",
                         style: TextStyle(fontSize: 16, color: Colors.grey),
+                        textAlign: TextAlign.center,
                       ),
                     ],
                   ),
@@ -92,47 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: passwordController,
-                  obscureText: !isPasswordVisible,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.lock),
-                    hintText: "Mật khẩu",
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        isPasswordVisible
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          isPasswordVisible = !isPasswordVisible;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                      );
-                    },
-                    child: const Text("Quên mật khẩu?"),
-                  ),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 24),
                 Container(
                   width: double.infinity,
                   height: 50,
@@ -143,9 +103,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   child: TextButton(
-                    onPressed: _login,
+                    onPressed: _sendResetLink,
                     child: const Text(
-                      "Đăng nhập",
+                      "Lấy mã OTP",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
@@ -155,18 +115,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Bạn chưa có tài khoản?"),
+                      const Text("Bạn đã nhớ mật khẩu?"),
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterScreen(),
-                            ),
-                          );
+                          Navigator.pop(context);
                         },
                         child: const Text(
-                          "Đăng ký",
+                          "Đăng nhập",
                           style: TextStyle(color: Colors.green),
                         ),
                       ),
