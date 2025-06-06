@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
+import 'package:app_ocake/models/product.dart';
+import 'package:app_ocake/models/category.dart';
+import 'package:app_ocake/models/branch.dart';
+import 'package:app_ocake/models/promotion.dart'; // IMPORT PROMOTION MODEL
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_detail_screen.dart';
 import 'order_history_screen.dart';
-import '../widgets/product_card.dart';
-import '../../admin/screens/manage_products_screen.dart';
+import '../widgets/product_cart.dart';
+// -------------------------------------------------------------
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -12,39 +19,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _selectedBranch = 'Hỷ Lâm Môn Nguyễn Trãi';
-
-  final List<Map<String, String>> _branches = [
-    {
-      'name': 'Hỷ Lâm Môn Nguyễn Trãi',
-      'address': '548 – 550 Nguyễn Trãi, P.8, Q.5, Tp.HCM',
-    },
-    {
-      'name': 'Hỷ Lâm Môn Âu Cơ',
-      'address': '29 – 31 Âu Cơ, P.14, Q.11, Tp.HCM',
-    },
-    {
-      'name': 'Hỷ Lâm Môn Hoàng Diệu',
-      'address': '315 Hoàng Diệu, P.6, Q.4, Tp.HCM',
-    },
-    {
-      'name': 'Hỷ Lâm Môn Trần Hưng Đạo',
-      'address': '99 Trần Hưng Đạo, Q.1, Tp.HCM',
-    },
-    {
-      'name': 'Hỷ Lâm Môn Võ Văn Kiệt',
-      'address': '12 Võ Văn Kiệt, Q.5, Tp.HCM',
-    },
-  ];
+  Branch? _selectedBranchObject;
+  List<Branch> _branchesFromDb = [];
+  bool _isLoadingBranches = true;
 
   int _currentIndex = 0;
-
   final List<Widget> _screens = [
     HomeContent(),
     CartScreen(),
     OrderHistoryScreen(),
     ProfileScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBranches();
+  }
+
+  Future<void> _loadBranches() async {
+    try {
+      QuerySnapshot branchSnapshot =
+          await FirebaseFirestore.instance
+              .collection('branches')
+              .orderBy('name')
+              .get();
+
+      List<Branch> loadedBranches =
+          branchSnapshot.docs.map((doc) => Branch.fromFirestore(doc)).toList();
+
+      if (mounted) {
+        setState(() {
+          _branchesFromDb = loadedBranches;
+          if (_branchesFromDb.isNotEmpty) {
+            _selectedBranchObject = _branchesFromDb.first;
+          }
+          _isLoadingBranches = false;
+        });
+      }
+    } catch (e) {
+      print("Lỗi tải danh sách chi nhánh: $e");
+      if (mounted) {
+        setState(() {
+          _isLoadingBranches = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,71 +75,160 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         title: Row(
           children: [
-            const Icon(Icons.location_on, color: Colors.white),
+            const Icon(Icons.location_on, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<Map<String, String>>(
-                  value: _branches.firstWhere(
-                    (branch) => branch['address'] == _selectedBranch,
-                    orElse: () => _branches.first,
-                  ),
-                  dropdownColor: Colors.green,
-                  icon: const Icon(Icons.menu, color: Colors.white),
-                  style: const TextStyle(color: Colors.black, fontSize: 14),
-                  onChanged: (Map<String, String>? newValue) {
-                    setState(() {
-                      _selectedBranch = newValue!['address']!;
-                    });
-                  },
-                  items: _branches.map<DropdownMenuItem<Map<String, String>>>((branch) {
-                    return DropdownMenuItem<Map<String, String>>(
-                      value: branch,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            branch['name']!,
-                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 19)
+              child:
+                  _isLoadingBranches
+                      ? Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
                           ),
-                          Text(
-                            branch['address']!,
-                            style: const TextStyle(color: Colors.white, fontSize: 16),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
+                        ),
+                      )
+                      : (_branchesFromDb.isEmpty
+                          ? Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 18.0),
+                            child: Text(
+                              'Không có chi nhánh',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.7),
+                                fontSize: 16,
+                              ),
+                            ),
+                          )
+                          : DropdownButtonHideUnderline(
+                            child: DropdownButton<Branch>(
+                              value: _selectedBranchObject,
+                              isExpanded: true,
+                              dropdownColor: Colors.green,
+                              icon: const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.white,
+                              ),
+                              selectedItemBuilder: (BuildContext context) {
+                                return _branchesFromDb.map<Widget>((
+                                  Branch branch,
+                                ) {
+                                  return Container(
+                                    alignment: Alignment.centerLeft,
+                                    height: kToolbarHeight,
+                                    child: Text(
+                                      _selectedBranchObject?.name ??
+                                          'Chọn chi nhánh',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList();
+                              },
+                              onChanged: (Branch? newValue) {
+                                if (newValue != null) {
+                                  setState(() {
+                                    _selectedBranchObject = newValue;
+                                  });
+                                  print('Đã chọn chi nhánh: ${newValue.name}');
+                                }
+                              },
+                              items:
+                                  _branchesFromDb.map<DropdownMenuItem<Branch>>(
+                                    (branch) {
+                                      return DropdownMenuItem<Branch>(
+                                        value: branch,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 10.0,
+                                            horizontal: 0,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text(
+                                                branch.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.white,
+                                                  fontSize: 15,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              if (branch.address.isNotEmpty)
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        top: 2.0,
+                                                      ),
+                                                  child: Text(
+                                                    branch.address,
+                                                    style: TextStyle(
+                                                      color: Colors.white
+                                                          .withOpacity(0.85),
+                                                      fontSize: 12,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 1,
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ).toList(),
+                            ),
+                          )),
             ),
           ],
         ),
       ),
       body: Column(
         children: [
-          // Thanh tìm kiếm
           Container(
             color: Colors.green,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Bạn đang thèm món bánh gì?',
+                  hintStyle: TextStyle(color: Colors.grey[500]),
                   prefixIcon: const Icon(Icons.search, color: Colors.grey),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 20,
+                  ),
                 ),
+                onSubmitted: (value) {
+                  print('Tìm kiếm: $value');
+                },
               ),
             ),
           ),
-          // Các phần khác (giữ nguyên)
           Expanded(
-            child: _screens[_currentIndex],
+            child: IndexedStack(index: _currentIndex, children: _screens),
           ),
         ],
       ),
@@ -131,22 +241,30 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         type: BottomNavigationBarType.fixed,
         selectedItemColor: Colors.green,
-        unselectedItemColor: Colors.grey,
+        unselectedItemColor: Colors.grey[600],
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        backgroundColor: Colors.white,
+        elevation: 8.0,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
             label: 'Trang chủ',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart),
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
             label: 'Giỏ hàng',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.receipt),
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
             label: 'Đơn hàng',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
             label: 'Tài khoản',
           ),
         ],
@@ -155,231 +273,281 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+// ===================================================================================
+// Widget HomeContent: Chứa nội dung chính của tab Trang chủ
+// ===================================================================================
 class HomeContent extends StatelessWidget {
-  final List<String> categories = [
-    'Bánh Mousse',
-    'Bánh Tiramisu',
-    'Bánh Bông Lan',
-    'Bánh Sinh Nhật',
-    'Bánh Creepe sầu riêng',
-  ];
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
 
-  final List<Map<String, dynamic>> hotDeals = [
-    {
-      'name': 'Bánh Cheesecake',
-      'price': 75000,
-      'discount': 59000,
-      'image': 'assets/images/cheesecake.jpg',
-    },
-    {
-      'name': 'Bánh Socola Lava',
-      'price': 70000,
-      'discount': 55000,
-      'image': 'assets/images/socolalava.jpg',
-    },
-  ];
+  void _navigateToDetail(BuildContext context, Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+    );
+  }
 
-  final List<Map<String, dynamic>> bestSellers = [
-    {
-      'name': 'Bánh Mousse Dâu',
-      'price': 59000,
-      'image': 'assets/images/moussedau.jpg',
-    },
-    {
-      'name': 'Bánh Bông Lan Trứng Muối',
-      'price': 69000,
-      'image': 'assets/images/banhbonglan.jpg',
-    },
-  ];
+  Widget _buildLoadingIndicator() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: CircularProgressIndicator(),
+    ),
+  );
+  Widget _buildErrorWidget(String sectionName, String errorDetails) {
+    print("Firestore Error (Section: $sectionName): $errorDetails");
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          'Lỗi tải $sectionName. Vui lòng thử lại.',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
 
-  final List<Map<String, dynamic>> allCakes = [
-    {
-      'name': 'Bánh Tiramisu',
-      'price': 65000,
-      'image': 'assets/images/tiramisu.png',
-    },
-    {
-      'name': 'Bánh Cupcake Socola',
-      'price': 39000,
-      'image': 'assets/images/cupcakesocola.png',
-    },
-    {
-      'name': 'Bánh Mousse Dâu',
-      'price': 59000,
-      'image': 'assets/images/moussedau.jpg',
-    },
-    {
-      'name': 'Bánh Bông Lan Trứng Muối',
-      'price': 69000,
-      'image': 'assets/images/banhbonglan.jpg',
-    },
-  ];
+  Widget _buildEmptyWidget(String message) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Text(message, style: TextStyle(color: Colors.grey[600])),
+    ),
+  );
+
+  Future<List<Product>> _fetchProductsWithPromotions(
+    QuerySnapshot productSnapshot,
+  ) async {
+    List<Product> productsWithDetails = [];
+    if (productSnapshot.docs.isEmpty) return productsWithDetails;
+
+    for (var doc in productSnapshot.docs) {
+      Product product = Product.fromFirestore(doc);
+      if (product.promotionIds != null && product.promotionIds!.isNotEmpty) {
+        String promoId = product.promotionIds!.trim().replaceAll(
+          RegExp(r'[\[\]"\s]'),
+          '',
+        ); // Xử lý nếu có ký tự thừa
+        if (promoId.isNotEmpty) {
+          try {
+            DocumentSnapshot promoDoc =
+                await FirebaseFirestore.instance
+                    .collection('promotions')
+                    .doc(promoId)
+                    .get();
+            if (promoDoc.exists) {
+              Promotion promotion = Promotion.fromFirestore(promoDoc);
+              product.calculateAndSetDiscountPrice(promotion);
+            } else {
+              product.calculateAndSetDiscountPrice(null);
+              print(
+                "Warning: Promotion ID '$promoId' for product '${product.name}' not found.",
+              );
+            }
+          } catch (e) {
+            print(
+              "Error fetching promotion '$promoId' for product '${product.name}': $e",
+            );
+            product.calculateAndSetDiscountPrice(null);
+          }
+        } else {
+          product.calculateAndSetDiscountPrice(null);
+        }
+      } else {
+        product.calculateAndSetDiscountPrice(null);
+      }
+      productsWithDetails.add(product);
+    }
+    return productsWithDetails;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final productsRef = FirebaseFirestore.instance.collection('products');
+    final categoriesRef = FirebaseFirestore.instance.collection('categories');
+
     return Scaffold(
       body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 12),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-              child: Text('Deal hot mỗi ngày',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
+            _buildSectionTitle('Deal hot mỗi ngày'),
             Container(
-              height: 250,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                itemCount: hotDeals.length,
-                itemBuilder: (context, index) {
-                  final cake = hotDeals[index];
-                  return Container(
-                    width: 160,
-                    margin: EdgeInsets.only(right: 12),
-                    child: CakeCard(
-                      name: cake['name'],
-                      price: cake['discount'],
-                      imageUrl: cake['image'],
-                      originalPrice: cake['price'],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProductDetailScreen(
-                              name: cake['name'],
-                              price: cake['discount'],
-                              imageUrl: cake['image'],
-                              description: 'Deal hot: ${cake['name']} giảm giá cực sốc!',
-                            ),
-                          ),
+              height: 270,
+              child: StreamBuilder<QuerySnapshot>(
+                // Lọc các sản phẩm có promotionIds không rỗng và isAvailable
+                stream:
+                    productsRef
+                        .where('isAvailable', isEqualTo: true)
+                        .where(
+                          'promotionIds',
+                          isNotEqualTo: null,
+                        ) // Phải có promotionIds
+                        .where(
+                          'promotionIds',
+                          isNotEqualTo: "",
+                        ) // Và không được rỗng
+                        .limit(
+                          10,
+                        ) // Lấy nhiều hơn một chút để có cơ hội lọc ra deal tốt
+                        .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    return _buildLoadingIndicator();
+                  if (snapshot.hasError)
+                    return _buildErrorWidget(
+                      'Deal Hot',
+                      snapshot.error.toString(),
+                    );
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                    return _buildEmptyWidget('Chưa có deal hot nào');
+
+                  return FutureBuilder<List<Product>>(
+                    future: _fetchProductsWithPromotions(snapshot.data!),
+                    builder: (context, processedSnapshot) {
+                      if (processedSnapshot.connectionState ==
+                          ConnectionState.waiting)
+                        return _buildLoadingIndicator();
+                      if (processedSnapshot.hasError)
+                        return _buildErrorWidget(
+                          'Deal Hot (promotions)',
+                          processedSnapshot.error.toString(),
                         );
-                      },
-                    ),
+
+                      // Lọc lại chỉ những sản phẩm thực sự có giá giảm sau khi tính toán
+                      final hotDealProducts =
+                          processedSnapshot.data
+                              ?.where(
+                                (p) =>
+                                    p.calculatedDiscountPrice != null &&
+                                    p.calculatedDiscountPrice! < p.price,
+                              )
+                              .take(6)
+                              .toList() ??
+                          [];
+
+                      if (hotDealProducts.isEmpty)
+                        return _buildEmptyWidget(
+                          'Chưa có deal hot nào hấp dẫn',
+                        );
+
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: hotDealProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = hotDealProducts[index];
+                          return Container(
+                            width: 165,
+                            margin: EdgeInsets.only(right: 12),
+                            child: ProductCart(
+                              product: product,
+                              onTap: () => _navigateToDetail(context, product),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),
             ),
+            SizedBox(height: 20),
 
-            SizedBox(height: 15),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text('Danh mục sản phẩm',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
+            _buildSectionTitle('Danh mục sản phẩm'),
             Container(
-              height: 120,
+              height: 125,
               margin: const EdgeInsets.symmetric(vertical: 8),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: categories.length,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                itemBuilder: (context, index) {
-                  return Container(
-                    width: 80,
-                    margin: EdgeInsets.only(right: 12),
-                    child: Column(
-                      children: [
-                        Container(
-                          height: 60,
-                          width: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.green[50],
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              image: AssetImage('assets/images/category_${index + 1}.png'),
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          categories[index],
-                          style: TextStyle(fontSize: 13),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-              child: Text('Sản phẩm được ưa thích',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            Container(
-              height: 250,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                itemCount: bestSellers.length,
-                itemBuilder: (context, index) {
-                  final cake = bestSellers[index];
-                  return Container(
-                    width: 160,
-                    margin: EdgeInsets.only(right: 12),
-                    child: CakeCard(
-                      name: cake['name'],
-                      price: cake['price'],
-                      imageUrl: cake['image'],
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProductDetailScreen(
-                              name: cake['name'],
-                              price: cake['price'],
-                              imageUrl: cake['image'],
-                              description: 'Bánh ${cake['name']} là sản phẩm được yêu thích nhất!',
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
-              child: Text('Các sản phẩm',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: GridView.builder(
-                physics: NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                itemCount: allCakes.length,
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.75,
-                ),
-                itemBuilder: (context, index) {
-                  final cake = allCakes[index];
-                  return CakeCard(
-                    name: cake['name'],
-                    price: cake['price'],
-                    imageUrl: cake['image'],
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductDetailScreen(
-                            name: cake['name'],
-                            price: cake['price'],
-                            imageUrl: cake['image'],
-                            description: 'Bánh ${cake['name']} thơm ngon, hoàn hảo cho mọi dịp.',
+              child: StreamBuilder<QuerySnapshot>(
+                stream: categoriesRef.orderBy('name').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    return _buildLoadingIndicator();
+                  if (snapshot.hasError)
+                    return _buildErrorWidget(
+                      'Danh mục',
+                      snapshot.error.toString(),
+                    );
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                    return _buildEmptyWidget('Không có danh mục nào');
+                  final categoriesFromDb =
+                      snapshot.data!.docs
+                          .map((doc) => Category.fromFirestore(doc))
+                          .toList();
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: categoriesFromDb.length,
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    itemBuilder: (context, index) {
+                      final category = categoriesFromDb[index];
+                      return Container(
+                        width: 90,
+                        margin: EdgeInsets.only(right: 12),
+                        child: InkWell(
+                          onTap: () {
+                            print(
+                              'Đã chọn danh mục: ${category.name} (ID: ${category.id})',
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                height: 70,
+                                width: 70,
+                                decoration: BoxDecoration(
+                                  color: Colors.green[50],
+                                  shape: BoxShape.circle,
+                                  image:
+                                      category.imageAssetPath.isNotEmpty
+                                          ? DecorationImage(
+                                            image: AssetImage(
+                                              category.imageAssetPath,
+                                            ),
+                                            fit: BoxFit.cover,
+                                            onError: (e, s) {},
+                                          )
+                                          : null,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withOpacity(0.2),
+                                      blurRadius: 3,
+                                      offset: Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child:
+                                    category.imageAssetPath.isEmpty
+                                        ? Icon(
+                                          Icons.category_rounded,
+                                          color: Colors.green[300],
+                                          size: 35,
+                                        )
+                                        : null,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                category.name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black87,
+                                ),
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -388,121 +556,129 @@ class HomeContent extends StatelessWidget {
                 },
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+            SizedBox(height: 20),
 
-class CakeCard extends StatelessWidget {
-  final String name;
-  final int price;
-  final String imageUrl;
-  final int? originalPrice;
-  final VoidCallback onTap;
-
-  const CakeCard({
-    required this.name,
-    required this.price,
-    required this.imageUrl,
-    this.originalPrice,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isAsset = !imageUrl.startsWith('http');
-
-    return InkWell(
-      onTap: onTap,
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              child: isAsset
-                  ? Image.asset(
-                      imageUrl,
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.network(
-                      imageUrl,
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 120,
-                          width: double.infinity,
-                          color: Colors.grey[200],
-                          child: Icon(Icons.broken_image, color: Colors.grey),
-                        );
-                      },
-                    ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                name,
-                style: TextStyle(fontWeight: FontWeight.bold),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: originalPrice != null
-                  ? Row(
-                      children: [
-                        Text(
-                          '${originalPrice}đ',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          '${price}đ',
-                          style: TextStyle(
-                              color: Colors.green, fontWeight: FontWeight.w600),
-                        ),
-                      ],
-                    )
-                  : Text(
-                      '${price}đ',
-                      style: TextStyle(
-                          color: Colors.green, fontWeight: FontWeight.w600),
-                    ),
-            ),
-            Spacer(),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Container(
-                margin: EdgeInsets.all(10),
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: Colors.green,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: Icon(Icons.add, color: Colors.white, size: 20),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Đã thêm $name vào giỏ hàng')),
+            _buildSectionTitle('Sản phẩm bán chạy'),
+            Container(
+              height: 270,
+              child: StreamBuilder<QuerySnapshot>(
+                stream:
+                    productsRef
+                        .where('isAvailable', isEqualTo: true)
+                        .where('isBestSeller', isEqualTo: true)
+                        .limit(6)
+                        .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting)
+                    return _buildLoadingIndicator();
+                  if (snapshot.hasError)
+                    return _buildErrorWidget(
+                      'Sản phẩm bán chạy',
+                      snapshot.error.toString(),
                     );
-                  },
-                ),
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                    return _buildEmptyWidget('Chưa có sản phẩm bán chạy');
+
+                  return FutureBuilder<List<Product>>(
+                    // Lồng FutureBuilder
+                    future: _fetchProductsWithPromotions(snapshot.data!),
+                    builder: (context, processedSnapshot) {
+                      if (processedSnapshot.connectionState ==
+                          ConnectionState.waiting)
+                        return _buildLoadingIndicator();
+                      if (processedSnapshot.hasError)
+                        return _buildErrorWidget(
+                          'Sản phẩm bán chạy (promotions)',
+                          processedSnapshot.error.toString(),
+                        );
+                      if (!processedSnapshot.hasData ||
+                          processedSnapshot.data!.isEmpty)
+                        return _buildEmptyWidget('Chưa có sản phẩm bán chạy');
+
+                      final bestSellingProducts = processedSnapshot.data!;
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: bestSellingProducts.length,
+                        itemBuilder: (context, index) {
+                          final product = bestSellingProducts[index];
+                          return Container(
+                            width: 165,
+                            margin: EdgeInsets.only(right: 12),
+                            child: ProductCart(
+                              product: product,
+                              onTap: () => _navigateToDetail(context, product),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
               ),
             ),
+            SizedBox(height: 20),
+
+            _buildSectionTitle('Khám phá thêm'),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0),
+              child: StreamBuilder<QuerySnapshot>(
+                stream: productsRef.orderBy('name').snapshots(),
+                builder: (context, processedSnapshot) {
+                  if (processedSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return GridView.builder(
+                      physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemCount: 6, // Số lượng placeholder
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Số cột
+                        mainAxisSpacing: 12, // Khoảng cách dọc
+                        crossAxisSpacing: 12, // Khoảng cách ngang
+                        childAspectRatio: 0.70, // Tỉ lệ của item
+                      ),
+                      // ----------------------
+                      itemBuilder:
+                          (context, index) => Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                    );
+                  }
+                  if (processedSnapshot.hasError)
+                    return _buildErrorWidget(
+                      'Tất cả sản phẩm ',
+                      processedSnapshot.error.toString(),
+                    );
+                  if (!processedSnapshot.hasData ||
+                      processedSnapshot.data!.docs.isEmpty)
+                    return _buildEmptyWidget('Không có sản phẩm để khám phá');
+
+                  final allProducts = processedSnapshot.data!.docs;
+                  return GridView.builder(
+                    physics: NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    itemCount: allProducts.length,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      childAspectRatio: 0.70,
+                    ),
+                    itemBuilder: (context, index) {
+                      final product = Product.fromFirestore(allProducts[index]);
+                      return ProductCart(
+                        product: product,
+                        onTap: () => _navigateToDetail(context, product),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 30),
           ],
         ),
       ),

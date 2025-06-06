@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "603966469908",
+    "project_id": "ocake-flutter-app",
+    "storage_bucket": "ocake-flutter-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:603966469908:android:64d8dba89c0859bc977401",
+        "android_client_info": {
+          "package_name": "com.example.app_ocake"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "603966469908-hiej5astuakhuaasdhbrntpf2oeonpue.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAobH5f-8f5WH_APbom6OtRSFMdMNUcPdY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "603966469908-hiej5astuakhuaasdhbrntpf2oeonpue.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
