@@ -79,7 +79,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
@@ -185,7 +185,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                   trailing: Text(
                     "${order.totalAmount.toStringAsFixed(0)}đ",
                     style: const TextStyle(
-                      color: Colors.green,
+                      color: Color(0xFFBC132C),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -201,7 +201,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
-                      color: Colors.green,
+                      color: Color(0xFFBC132C),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.15),
@@ -282,7 +282,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                   style: TextStyle(
                     color:
                         status == "Đã giao hàng"
-                            ? Colors.green[800]
+                            ? Color(0xFFBC132C)
                             : (status.toLowerCase().contains("hủy")
                                 ? Colors.red[800]
                                 : Colors.orange[800]),

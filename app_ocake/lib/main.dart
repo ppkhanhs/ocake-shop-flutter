@@ -39,19 +39,23 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Hỷ Lâm Môn', // Tên ứng dụng của bạn
       theme: ThemeData(
-        primarySwatch: Colors.green, // Màu chủ đạo
+        primaryColor: Color(0xFFBC132C), // Màu chủ đạo
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          primary: Color(0xFFBC132C),
+          secondary: Color(0xFFBC132C),
+        ),
         fontFamily: 'Roboto', // Font chữ mặc định (nếu có)
         // (Tùy chọn) Tùy chỉnh thêm theme ở đây
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green, // Màu nút ElevatedButton
+            backgroundColor: Color(0xFFBC132C), // Màu nút ElevatedButton
             foregroundColor: Colors.white, // Màu chữ trên nút
             padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
             textStyle: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ),
         appBarTheme: AppBarTheme(
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFFBC132C),
           foregroundColor: Colors.white, // Màu chữ và icon trên AppBar
           elevation: 1,
         ),

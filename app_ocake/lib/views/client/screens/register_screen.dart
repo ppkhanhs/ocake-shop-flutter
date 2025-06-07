@@ -98,7 +98,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(
           content: Text("Đăng ký thành công! Vui lòng đăng nhập."),
           duration: Duration(seconds: 2),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFFBC132C),
         ),
       );
 
@@ -162,7 +162,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Color(0xFFBC132C),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -298,7 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               ? null
                               : _registerWithFirestore, // Gọi hàm đăng ký mới
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green, // Màu nền
+                        backgroundColor: Color(0xFFBC132C), // Màu nền
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -340,7 +340,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: const Text(
                             "Đăng nhập",
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Color(0xFFBC132C),
                               fontWeight: FontWeight.bold,
                             ),
                           ),

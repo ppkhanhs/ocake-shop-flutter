@@ -332,7 +332,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Xác nhận đơn hàng'),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
@@ -532,7 +532,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.green,
+                                color: Color(0xFFBC132C),
                               ),
                             ),
                           ],
@@ -597,7 +597,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                     _selectedPaymentMethod
                                                                 ?.id ==
                                                             method.id
-                                                        ? Colors.green
+                                                        ? Color(0xFFBC132C)
                                                         : Colors.grey.shade300,
                                                 width:
                                                     _selectedPaymentMethod
@@ -616,7 +616,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                     _selectedPaymentMethod
                                                                 ?.id ==
                                                             method.id
-                                                        ? Colors.green
+                                                        ? Color(0xFFBC132C)
                                                         : Colors.grey[700],
                                               ),
                                               title: Text(
@@ -646,7 +646,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                                 value;
                                                           });
                                                         },
-                                                activeColor: Colors.green,
+                                                activeColor: Color(0xFFBC132C),
                                               ),
                                               onTap:
                                                   _isPlacingOrder
@@ -660,7 +660,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               selected:
                                                   _selectedPaymentMethod?.id ==
                                                   method.id,
-                                              selectedTileColor: Colors.green
+                                              selectedTileColor: Color(0xFFBC132C)
                                                   .withOpacity(0.05),
                                             ),
                                           ),
@@ -683,7 +683,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Color(0xFFBC132C),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -831,7 +831,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       decoration: InputDecoration(
         labelText: labelText,
         labelStyle: TextStyle(color: Colors.grey[700]),
-        prefixIcon: Icon(icon, color: Colors.green, size: 22),
+        prefixIcon: Icon(icon, color: Color(0xFFBC132C), size: 22),
         filled: true,
         fillColor:
             readOnlyStatus
@@ -848,7 +848,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.green, width: 1.5),
+          borderSide: BorderSide(color: Color(0xFFBC132C), width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

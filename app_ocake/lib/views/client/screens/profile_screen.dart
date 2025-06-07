@@ -196,7 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Cập nhật thông tin thành công!'),
-            backgroundColor: Colors.green,
+            backgroundColor: Color(0xFFBC132C),
           ),
         );
         // Nếu đã upload ảnh mới thành công, có thể reset _imageFile
@@ -264,7 +264,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Tài khoản', style: TextStyle(color: Colors.white)),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         elevation: 1,
         actions: [
           IconButton(
@@ -307,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: _isUpdating ? null : _pickImage,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: Colors.green,
+                              color: Color(0xFFBC132C),
                               shape: BoxShape.circle,
                               border: Border.all(color: Colors.white, width: 2),
                             ),
@@ -365,7 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 const SizedBox(height: 35),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
+                    backgroundColor: Color(0xFFBC132C),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -421,7 +421,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       decoration: InputDecoration(
         labelText: labelText,
         labelStyle: TextStyle(color: Colors.grey[700]),
-        prefixIcon: Icon(icon, color: Colors.green),
+        prefixIcon: Icon(icon, color: Color(0xFFBC132C)),
         filled: true,
         fillColor:
             readOnly
@@ -434,7 +434,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(
-            color: readOnly ? Colors.transparent : Colors.green,
+            color: readOnly ? Colors.transparent : Color(0xFFBC132C),
             width: 1.5,
           ),
         ),

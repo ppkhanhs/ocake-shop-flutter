@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Đăng nhập thành công!"),
-                backgroundColor: Colors.green,
+                backgroundColor: Color(0xFFBC132C),
               ),
             );
             Future.delayed(Duration(milliseconds: 500), () {
@@ -95,7 +95,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Mật khẩu không đúng."),
-                backgroundColor: Colors.red,
+                backgroundColor: Color(0xFFBC132C),
               ),
             );
           }
@@ -129,21 +129,21 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        if (Navigator.canPop(context)) {
-                          Navigator.pop(context);
-                        } else {
-                          print(
-                            "LoginScreen: Không thể pop, có thể là màn hình root",
-                          );
-                        }
-                      },
-                    ),
-                  ),
+                  // Align(
+                  //   alignment: Alignment.topLeft,
+                  //   child: IconButton(
+                  //     icon: const Icon(Icons.close),
+                  //     onPressed: () {
+                  //       if (Navigator.canPop(context)) {
+                  //         Navigator.pop(context);
+                  //       } else {
+                  //         print(
+                  //           "LoginScreen: Không thể pop, có thể là màn hình root",
+                  //         );
+                  //       }
+                  //     },
+                  //   ),
+                  // ),
                   const SizedBox(height: 20),
                   Center(
                     child: Column(
@@ -158,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Color(0xFFBC132C),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.green.withOpacity(0.7),
+                          color: Color(0xFFBC132C).withOpacity(0.7),
                           width: 1.5,
                         ),
                       ),
@@ -219,7 +219,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.green.withOpacity(0.7),
+                          color: Color(0xFFBC132C).withOpacity(0.7),
                           width: 1.5,
                         ),
                       ),
@@ -279,7 +279,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           _isLoading
                               ? null
                               : const LinearGradient(
-                                colors: [Colors.green, Colors.lightGreenAccent],
+                                colors: [Color(0xFFBC132C), Color(0xFFBC132C)],
                               ),
                       color: _isLoading ? Colors.grey[300] : null,
                     ),
@@ -332,7 +332,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: const Text(
                             "Đăng ký",
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Color(0xFFBC132C),
                               fontWeight: FontWeight.bold,
                             ),
                           ),

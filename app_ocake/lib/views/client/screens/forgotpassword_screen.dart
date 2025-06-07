@@ -109,7 +109,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           style: TextStyle(
                             fontSize: 26, // Giảm fontSize một chút
                             fontWeight: FontWeight.bold,
-                            color: Colors.green,
+                            color: Color(0xFFBC132C),
                           ),
                         ),
                         const SizedBox(height: 10), // Tăng khoảng cách
@@ -145,7 +145,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         // Thêm viền khi focus
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                          color: Colors.green.withOpacity(0.7),
+                          color: Color(0xFFBC132C).withOpacity(0.7),
                           width: 1.5,
                         ),
                       ),
@@ -177,7 +177,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       // Đổi sang ElevatedButton
                       onPressed: _isLoading ? null : _sendResetLink,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green, // Màu nền
+                        backgroundColor: Color(0xFFBC132C), // Màu nền
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -221,7 +221,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           child: const Text(
                             "Đăng nhập ngay", // Sửa lại text một chút
                             style: TextStyle(
-                              color: Colors.green,
+                              color: Color(0xFFBC132C),
                               fontWeight: FontWeight.bold,
                             ),
                           ),

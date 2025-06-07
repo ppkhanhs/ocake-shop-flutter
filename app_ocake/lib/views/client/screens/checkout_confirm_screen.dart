@@ -29,7 +29,7 @@ class OrderConfirmationScreen extends StatelessWidget {
           'Xác nhận đơn hàng',
           style: TextStyle(color: Colors.white),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         elevation: 0,
         automaticallyImplyLeading: false, // Không cho phép nút back mặc định
       ),
@@ -42,7 +42,7 @@ class OrderConfirmationScreen extends StatelessWidget {
               Center(
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle, color: Colors.green, size: 100),
+                    Icon(Icons.check_circle, color: Color(0xFFBC132C), size: 100),
                     const SizedBox(height: 16),
                     const Text(
                       'Đặt hàng thành công!',
@@ -95,7 +95,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          const Icon(Icons.attach_money, color: Colors.green),
+                          const Icon(Icons.attach_money, color: Color(0xFFBC132C)),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -220,7 +220,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
-                    backgroundColor: Colors.green,
+                    backgroundColor: Color(0xFFBC132C),
                   ),
                   onPressed: () {
                     // Quay về màn hình đầu tiên của stack (thường là HomeScreen)
@@ -250,7 +250,7 @@ class OrderConfirmationScreen extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: Colors.green,
+            color: Color(0xFFBC132C),
             size: 20,
           ), // Kích thước icon nhỏ hơn chút
           const SizedBox(width: 10),

@@ -98,7 +98,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
@@ -128,7 +128,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       },
                       child: Text('Đăng nhập ngay'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Color(0xFFBC132C),
                       ),
                     ),
                   ],
@@ -285,7 +285,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   Text(
                     "${order.totalAmount.toStringAsFixed(0)}đ",
                     style: const TextStyle(
-                      color: Colors.green,
+                      color: Color(0xFFBC132C),
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),

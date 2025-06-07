@@ -71,7 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         elevation: 0,
         title: Row(
           children: [
@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: DropdownButton<Branch>(
                               value: _selectedBranchObject,
                               isExpanded: true,
-                              dropdownColor: Colors.green,
+                              dropdownColor: Color(0xFFBC132C),
                               icon: const Icon(
                                 Icons.keyboard_arrow_down,
                                 color: Colors.white,
@@ -145,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         value: branch,
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
-                                            vertical: 10.0,
+                                            vertical: 2.0,
                                             horizontal: 0,
                                           ),
                                           child: Column(
@@ -196,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Container(
-            color: Colors.green,
+            color: Color(0xFFBC132C),
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
             child: Container(
               decoration: BoxDecoration(
@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.green,
+        selectedItemColor: Color(0xFFBC132C),
         unselectedItemColor: Colors.grey[600],
         selectedFontSize: 12,
         unselectedFontSize: 12,
@@ -375,16 +375,15 @@ class HomeContent extends StatelessWidget {
     final productsRef = FirebaseFirestore.instance.collection('products');
     final categoriesRef = FirebaseFirestore.instance.collection('categories');
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        physics: BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Deal hot mỗi ngày'),
-            Container(
-              height: 270,
-              child: StreamBuilder<QuerySnapshot>(
+    return SingleChildScrollView(
+      physics: BouncingScrollPhysics(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Deal hot mỗi ngày'),
+          Container(
+            height: 270,
+            child: StreamBuilder<QuerySnapshot>(
                 // Lọc các sản phẩm có promotionIds không rỗng và isAvailable
                 stream:
                     productsRef
@@ -531,7 +530,7 @@ class HomeContent extends StatelessWidget {
                                     category.imageAssetPath.isEmpty
                                         ? Icon(
                                           Icons.category_rounded,
-                                          color: Colors.green[300],
+                                          color: Color(0xFFBC132C),
                                           size: 35,
                                         )
                                         : null,
@@ -679,8 +678,7 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             SizedBox(height: 30),
-          ],
-        ),
+        ],
       ),
     );
   }

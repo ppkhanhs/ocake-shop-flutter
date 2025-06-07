@@ -135,7 +135,7 @@ class _CartScreenState extends State<CartScreen> {
 
     if (_currentCustomerIdFromSession == null) {
       return Scaffold(
-        appBar: AppBar(title: Text('Giỏ hàng'), backgroundColor: Colors.green),
+        appBar: AppBar(title: Text('Giỏ hàng'), backgroundColor: Color(0xFFBC132C)),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -150,7 +150,7 @@ class _CartScreenState extends State<CartScreen> {
                   );
                 },
                 child: Text('Đăng nhập'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                style: ElevatedButton.styleFrom(backgroundColor: Color(0xFFBC132C)),
               ),
             ],
           ),
@@ -161,7 +161,7 @@ class _CartScreenState extends State<CartScreen> {
     if (_cartStream == null) {
       _initializeCartStream();
       return Scaffold(
-        appBar: AppBar(title: Text('Giỏ hàng'), backgroundColor: Colors.green),
+        appBar: AppBar(title: Text('Giỏ hàng'), backgroundColor: Color(0xFFBC132C)),
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -264,7 +264,7 @@ class _CartScreenState extends State<CartScreen> {
                               Checkbox(
                                 value: item.selected,
                                 onChanged: (value) => toggleSelection(item),
-                                activeColor: Colors.green,
+                                activeColor: Color(0xFFBC132C),
                               ),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8.0),
@@ -394,7 +394,7 @@ class _CartScreenState extends State<CartScreen> {
                         style: const TextStyle(
                           fontSize: 19,
                           fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          color: Color(0xFFBC132C),
                         ),
                       ),
                     ],
@@ -403,7 +403,7 @@ class _CartScreenState extends State<CartScreen> {
                   ElevatedButton(
                     // Dòng 256 trước đây có thể liên quan đến nút này
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
+                      backgroundColor: Color(0xFFBC132C),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
