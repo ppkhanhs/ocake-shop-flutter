@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
+//   //   }
 import 'package:app_ocake/models/product.dart';
 import 'package:app_ocake/models/category.dart';
 import 'package:app_ocake/models/branch.dart';
-import 'package:app_ocake/models/promotion.dart'; // IMPORT PROMOTION MODEL
+import 'package:app_ocake/models/promotion.dart';
 import 'cart_screen.dart';
 import 'profile_screen.dart';
 import 'product_detail_screen.dart';

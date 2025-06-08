@@ -170,9 +170,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 40),
-                  TextFormField(
+                                    TextFormField(
                     controller: phoneController,
-                    keyboardType: TextInputType.phone,
+                    keyboardType: TextInputType.phone, // Đảm bảo keyboardType là phone
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.phone_outlined),
                       hintText: "Số điện thoại",
@@ -198,9 +198,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập số điện thoại.';
-                      return null;
+                      }
+                      // Tkiểm tra regex để đảm bảo chỉ chứa số
+                      if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                        return 'Số điện thoại không hợp lệ (chỉ được nhập số).';
+                      }
+                      return null; // Trả về null nếu hợp lệ
                     },
                   ),
                   const SizedBox(height: 16),

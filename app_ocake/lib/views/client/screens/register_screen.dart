@@ -209,11 +209,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       ),
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Vui lòng nhập số điện thoại.';
-                      // (Tùy chọn) Thêm validation regex cho SĐT Việt Nam
-                      // if (!RegExp(r"^(0[3|5|7|8|9])+([0-9]{8})\b").hasMatch(value)) return 'Số điện thoại không hợp lệ.';
-                      return null;
+                      }
+                      // Kiểm tra định dạng số điện thoại Việt Nam (10 số, bắt đầu bằng 0)
+                      if (!RegExp(r'^0\d{9}$').hasMatch(value)) {
+                        return 'Số điện thoại không hợp lệ (10 số, bắt đầu bằng 0).';
+                      }
+                      return null; // Trả về null nếu hợp lệ
                     },
                   ),
                   const SizedBox(height: 16),
