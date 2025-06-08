@@ -168,7 +168,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           widget.product.name,
           style: TextStyle(color: Colors.white, fontSize: 18),
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
         elevation: 1,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
@@ -248,7 +248,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               color:
                                   originalPriceToShow != null
                                       ? Colors.redAccent
-                                      : Colors.green,
+                                      : Color(0xFFBC132C),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -478,7 +478,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             color:
                                 _isAddingToCart || !isProductActuallyAvailable
                                     ? Colors.grey[300]
-                                    : Colors.green,
+                                    : Color(0xFFBC132C),
                             size: 26,
                           ),
                           onPressed:
@@ -527,7 +527,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                 ),
                               ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Color(0xFFBC132C),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),

@@ -12,28 +12,106 @@ import 'order_history_screen.dart';
 import '../widgets/product_cart.dart';
 // -------------------------------------------------------------
 
+// ... (các import và các class khác giữ nguyên) ...
+
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Branch? _selectedBranchObject;
-  List<Branch> _branchesFromDb = [];
-  bool _isLoadingBranches = true;
+  // Loại bỏ các biến trạng thái liên quan đến chi nhánh, chúng sẽ di chuyển vào HomeContent
+  // Branch? _selectedBranchObject;
+  // List<Branch> _branchesFromDb = [];
+  // bool _isLoadingBranches = true;
 
   int _currentIndex = 0;
   final List<Widget> _screens = [
-    HomeContent(),
-    CartScreen(),
-    OrderHistoryScreen(),
-    ProfileScreen(),
+    HomeContent(), // HomeContent sẽ tự quản lý AppBar và tìm kiếm của nó
+    CartScreen(), // CartScreen đã có AppBar riêng
+    OrderHistoryScreen(), // Đảm bảo OrderHistoryScreen cũng có AppBar riêng
+    ProfileScreen(), // ProfileScreen đã có AppBar riêng
   ];
 
   @override
   void initState() {
     super.initState();
-    _loadBranches();
+    // Loại bỏ hàm _loadBranches() khỏi đây
+    // _loadBranches();
+  }
+
+  // Loại bỏ hàm _loadBranches() khỏi đây
+  // Future<void> _loadBranches() async { ... }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // === BƯỚC 1A: XÓA TOÀN BỘ APPBAR KHỎI ĐÂY ===
+      // appBar: AppBar( ... ),
+
+      body: IndexedStack( // === BƯỚC 1B: BODY GIỜ CHỈ CÓ IndexedStack ===
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Color(0xFFBC132C),
+        unselectedItemColor: Colors.grey[600],
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        backgroundColor: Colors.white,
+        elevation: 8.0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            activeIcon: Icon(Icons.home),
+            label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart_outlined),
+            activeIcon: Icon(Icons.shopping_cart),
+            label: 'Giỏ hàng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.receipt_long_outlined),
+            activeIcon: Icon(Icons.receipt_long),
+            label: 'Đơn hàng',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Tài khoản',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ===================================================================================
+// Widget HomeContent: Chứa nội dung chính của tab Trang chủ
+// ===================================================================================
+class HomeContent extends StatefulWidget {
+  @override
+  _HomeContentState createState() => _HomeContentState();
+}
+
+class _HomeContentState extends State<HomeContent> {
+  // BƯỚC 2B: CHUYỂN CÁC BIẾN STATE VÀ HÀM TẢI CHI NHÁNH TỪ _HomeScreenState SANG ĐÂY
+  Branch? _selectedBranchObject;
+  List<Branch> _branchesFromDb = [];
+  bool _isLoadingBranches = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBranches(); // Tải chi nhánh khi HomeContent được khởi tạo
   }
 
   Future<void> _loadBranches() async {
@@ -57,7 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       }
     } catch (e) {
-      print("Lỗi tải danh sách chi nhánh: $e");
+      print("Lỗi tải danh sách chi nhánh trong HomeContent: $e");
       if (mounted) {
         setState(() {
           _isLoadingBranches = false;
@@ -66,10 +144,107 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 8.0),
+      child: Text(
+        title,
+        style: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: Colors.black87,
+        ),
+      ),
+    );
+  }
+
+  void _navigateToDetail(BuildContext context, Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+    );
+  }
+
+  Widget _buildLoadingIndicator() => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(32.0),
+      child: CircularProgressIndicator(),
+    ),
+  );
+  Widget _buildErrorWidget(String sectionName, String errorDetails) {
+    print("Firestore Error (Section: $sectionName): $errorDetails");
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Text(
+          'Lỗi tải $sectionName. Vui lòng thử lại.',
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget(String message) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Text(message, style: TextStyle(color: Colors.grey[600])),
+    ),
+  );
+
+  Future<List<Product>> _fetchProductsWithPromotions(
+    QuerySnapshot productSnapshot,
+  ) async {
+    List<Product> productsWithDetails = [];
+    if (productSnapshot.docs.isEmpty) return productsWithDetails;
+
+    for (var doc in productSnapshot.docs) {
+      Product product = Product.fromFirestore(doc);
+      if (product.promotionIds != null && product.promotionIds!.isNotEmpty) {
+        String promoId = product.promotionIds!.trim().replaceAll(
+          RegExp(r'[\[\]"\s]'),
+          '',
+        ); // Xử lý nếu có ký tự thừa
+        if (promoId.isNotEmpty) {
+          try {
+            DocumentSnapshot promoDoc =
+                await FirebaseFirestore.instance
+                    .collection('promotions')
+                    .doc(promoId)
+                    .get();
+            if (promoDoc.exists) {
+              Promotion promotion = Promotion.fromFirestore(promoDoc);
+              product.calculateAndSetDiscountPrice(promotion);
+            } else {
+              product.calculateAndSetDiscountPrice(null);
+              print(
+                "Warning: Promotion ID '$promoId' for product '${product.name}' not found.",
+              );
+            }
+          } catch (e) {
+            print(
+              "Error fetching promotion '$promoId' for product '${product.name}': $e",
+            );
+            product.calculateAndSetDiscountPrice(null);
+          }
+        } else {
+          product.calculateAndSetDiscountPrice(null);
+        }
+      } else {
+        product.calculateAndSetDiscountPrice(null);
+      }
+      productsWithDetails.add(product);
+    }
+    return productsWithDetails;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final productsRef = FirebaseFirestore.instance.collection('products');
+    final categoriesRef = FirebaseFirestore.instance.collection('categories');
+
+    // BƯỚC 2C: HomeContent TRẢ VỀ Scaffold RIÊNG
     return Scaffold(
-      appBar: AppBar(
+      appBar: AppBar( // APPBAR CHO RIÊNG MÀN HÌNH HOME
         backgroundColor: Color(0xFFBC132C),
         elevation: 0,
         title: Row(
@@ -192,274 +367,122 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Container(
-            color: Color(0xFFBC132C),
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(30),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Bạn đang thèm món bánh gì?',
-                  hintStyle: TextStyle(color: Colors.grey[500]),
-                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14,
-                    horizontal: 20,
-                  ),
+      body: SingleChildScrollView(
+        physics: BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container( // BƯỚC 2D: CHUYỂN CONTAINER TÌM KIẾM VÀO ĐÂY (VÀO BODY CỦA HomeContent)
+              color: Color(0xFFBC132C), // Đảm bảo màu sắc khớp với AppBar
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
-                onSubmitted: (value) {
-                  print('Tìm kiếm: $value');
-                },
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Bạn đang thèm món bánh gì?',
+                    hintStyle: TextStyle(color: Colors.grey[500]),
+                    prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 20,
+                    ),
+                  ),
+                  onSubmitted: (value) {
+                    print('Tìm kiếm: $value');
+                  },
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: IndexedStack(index: _currentIndex, children: _screens),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xFFBC132C),
-        unselectedItemColor: Colors.grey[600],
-        selectedFontSize: 12,
-        unselectedFontSize: 12,
-        backgroundColor: Colors.white,
-        elevation: 8.0,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'Trang chủ',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.shopping_cart_outlined),
-            activeIcon: Icon(Icons.shopping_cart),
-            label: 'Giỏ hàng',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'Đơn hàng',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Tài khoản',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ===================================================================================
-// Widget HomeContent: Chứa nội dung chính của tab Trang chủ
-// ===================================================================================
-class HomeContent extends StatelessWidget {
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12.0, 16.0, 12.0, 8.0),
-      child: Text(
-        title,
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.black87,
-        ),
-      ),
-    );
-  }
-
-  void _navigateToDetail(BuildContext context, Product product) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
-    );
-  }
-
-  Widget _buildLoadingIndicator() => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(32.0),
-      child: CircularProgressIndicator(),
-    ),
-  );
-  Widget _buildErrorWidget(String sectionName, String errorDetails) {
-    print("Firestore Error (Section: $sectionName): $errorDetails");
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Text(
-          'Lỗi tải $sectionName. Vui lòng thử lại.',
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyWidget(String message) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Text(message, style: TextStyle(color: Colors.grey[600])),
-    ),
-  );
-
-  Future<List<Product>> _fetchProductsWithPromotions(
-    QuerySnapshot productSnapshot,
-  ) async {
-    List<Product> productsWithDetails = [];
-    if (productSnapshot.docs.isEmpty) return productsWithDetails;
-
-    for (var doc in productSnapshot.docs) {
-      Product product = Product.fromFirestore(doc);
-      if (product.promotionIds != null && product.promotionIds!.isNotEmpty) {
-        String promoId = product.promotionIds!.trim().replaceAll(
-          RegExp(r'[\[\]"\s]'),
-          '',
-        ); // Xử lý nếu có ký tự thừa
-        if (promoId.isNotEmpty) {
-          try {
-            DocumentSnapshot promoDoc =
-                await FirebaseFirestore.instance
-                    .collection('promotions')
-                    .doc(promoId)
-                    .get();
-            if (promoDoc.exists) {
-              Promotion promotion = Promotion.fromFirestore(promoDoc);
-              product.calculateAndSetDiscountPrice(promotion);
-            } else {
-              product.calculateAndSetDiscountPrice(null);
-              print(
-                "Warning: Promotion ID '$promoId' for product '${product.name}' not found.",
-              );
-            }
-          } catch (e) {
-            print(
-              "Error fetching promotion '$promoId' for product '${product.name}': $e",
-            );
-            product.calculateAndSetDiscountPrice(null);
-          }
-        } else {
-          product.calculateAndSetDiscountPrice(null);
-        }
-      } else {
-        product.calculateAndSetDiscountPrice(null);
-      }
-      productsWithDetails.add(product);
-    }
-    return productsWithDetails;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final productsRef = FirebaseFirestore.instance.collection('products');
-    final categoriesRef = FirebaseFirestore.instance.collection('categories');
-
-    return SingleChildScrollView(
-      physics: BouncingScrollPhysics(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSectionTitle('Deal hot mỗi ngày'),
-          Container(
-            height: 270,
-            child: StreamBuilder<QuerySnapshot>(
-                // Lọc các sản phẩm có promotionIds không rỗng và isAvailable
-                stream:
-                    productsRef
-                        .where('isAvailable', isEqualTo: true)
-                        .where(
-                          'promotionIds',
-                          isNotEqualTo: null,
-                        ) // Phải có promotionIds
-                        .where(
-                          'promotionIds',
-                          isNotEqualTo: "",
-                        ) // Và không được rỗng
-                        .limit(
-                          10,
-                        ) // Lấy nhiều hơn một chút để có cơ hội lọc ra deal tốt
-                        .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting)
-                    return _buildLoadingIndicator();
-                  if (snapshot.hasError)
-                    return _buildErrorWidget(
-                      'Deal Hot',
-                      snapshot.error.toString(),
-                    );
-                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                    return _buildEmptyWidget('Chưa có deal hot nào');
-
-                  return FutureBuilder<List<Product>>(
-                    future: _fetchProductsWithPromotions(snapshot.data!),
-                    builder: (context, processedSnapshot) {
-                      if (processedSnapshot.connectionState ==
-                          ConnectionState.waiting)
-                        return _buildLoadingIndicator();
-                      if (processedSnapshot.hasError)
-                        return _buildErrorWidget(
-                          'Deal Hot (promotions)',
-                          processedSnapshot.error.toString(),
-                        );
-
-                      // Lọc lại chỉ những sản phẩm thực sự có giá giảm sau khi tính toán
-                      final hotDealProducts =
-                          processedSnapshot.data
-                              ?.where(
-                                (p) =>
-                                    p.calculatedDiscountPrice != null &&
-                                    p.calculatedDiscountPrice! < p.price,
-                              )
-                              .take(6)
-                              .toList() ??
-                          [];
-
-                      if (hotDealProducts.isEmpty)
-                        return _buildEmptyWidget(
-                          'Chưa có deal hot nào hấp dẫn',
-                        );
-
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        itemCount: hotDealProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = hotDealProducts[index];
-                          return Container(
-                            width: 165,
-                            margin: EdgeInsets.only(right: 12),
-                            child: ProductCart(
-                              product: product,
-                              onTap: () => _navigateToDetail(context, product),
-                            ),
-                          );
-                        },
+            _buildSectionTitle('Deal hot mỗi ngày'),
+            Container(
+              height: 270,
+              child: StreamBuilder<QuerySnapshot>(
+                  stream:
+                      productsRef
+                          .where('isAvailable', isEqualTo: true)
+                          .where(
+                            'promotionIds',
+                            isNotEqualTo: null,
+                          )
+                          .where(
+                            'promotionIds',
+                            isNotEqualTo: "",
+                          )
+                          .limit(
+                            10,
+                          )
+                          .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      return _buildLoadingIndicator();
+                    if (snapshot.hasError)
+                      return _buildErrorWidget(
+                        'Deal Hot',
+                        snapshot.error.toString(),
                       );
-                    },
-                  );
-                },
+                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+                      return _buildEmptyWidget('Chưa có deal hot nào');
+
+                    return FutureBuilder<List<Product>>(
+                      future: _fetchProductsWithPromotions(snapshot.data!),
+                      builder: (context, processedSnapshot) {
+                        if (processedSnapshot.connectionState ==
+                            ConnectionState.waiting)
+                          return _buildLoadingIndicator();
+                        if (processedSnapshot.hasError)
+                          return _buildErrorWidget(
+                            'Deal Hot (promotions)',
+                            processedSnapshot.error.toString(),
+                          );
+
+                        final hotDealProducts =
+                            processedSnapshot.data
+                                ?.where(
+                                  (p) =>
+                                      p.calculatedDiscountPrice != null &&
+                                      p.calculatedDiscountPrice! < p.price,
+                                )
+                                .take(6)
+                                .toList() ??
+                            [];
+
+                        if (hotDealProducts.isEmpty)
+                          return _buildEmptyWidget(
+                            'Chưa có deal hot nào hấp dẫn',
+                          );
+
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          padding: EdgeInsets.symmetric(horizontal: 12),
+                          itemCount: hotDealProducts.length,
+                          itemBuilder: (context, index) {
+                            final product = hotDealProducts[index];
+                            return Container(
+                              width: 165,
+                              margin: EdgeInsets.only(right: 12),
+                              child: ProductCart(
+                                product: product,
+                                onTap: () => _navigateToDetail(context, product),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
-            ),
             SizedBox(height: 20),
 
             _buildSectionTitle('Danh mục sản phẩm'),
@@ -578,7 +601,6 @@ class HomeContent extends StatelessWidget {
                     return _buildEmptyWidget('Chưa có sản phẩm bán chạy');
 
                   return FutureBuilder<List<Product>>(
-                    // Lồng FutureBuilder
                     future: _fetchProductsWithPromotions(snapshot.data!),
                     builder: (context, processedSnapshot) {
                       if (processedSnapshot.connectionState ==
@@ -626,7 +648,7 @@ class HomeContent extends StatelessWidget {
                   if (processedSnapshot.connectionState ==
                       ConnectionState.waiting) {
                     return GridView.builder(
-                      physics: NeverScrollableScrollPhysics(),
+                      // Đảm bảo physics: NeverScrollableScrollPhysics() đã được xóa như lần sửa trước
                       shrinkWrap: true,
                       itemCount: 6, // Số lượng placeholder
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -635,7 +657,6 @@ class HomeContent extends StatelessWidget {
                         crossAxisSpacing: 12, // Khoảng cách ngang
                         childAspectRatio: 0.70, // Tỉ lệ của item
                       ),
-                      // ----------------------
                       itemBuilder:
                           (context, index) => Container(
                             decoration: BoxDecoration(
@@ -656,7 +677,7 @@ class HomeContent extends StatelessWidget {
 
                   final allProducts = processedSnapshot.data!.docs;
                   return GridView.builder(
-                    physics: NeverScrollableScrollPhysics(),
+                    // Đảm bảo physics: NeverScrollableScrollPhysics() đã được xóa như lần sửa trước
                     shrinkWrap: true,
                     itemCount: allProducts.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -679,6 +700,7 @@ class HomeContent extends StatelessWidget {
             SizedBox(height: 30),
         ],
       ),
+    ),
     );
   }
 }

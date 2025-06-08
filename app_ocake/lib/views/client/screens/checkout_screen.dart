@@ -30,10 +30,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   PaymentMethod? _selectedPaymentMethod;
   List<PaymentMethod> _availablePaymentMethods = [];
   bool _isLoadingPaymentMethods = true;
-  bool _isPlacingOrder = false;
+  bool _isPlacingOrder = false; // Trạng thái khi đang đặt hàng
 
+  // Danh sách phương thức thanh toán tĩnh dự phòng
   final List<Map<String, dynamic>> _staticPaymentMethodsForFallback = [
-    // Giữ lại phòng trường hợp Firestore lỗi
     {
       'value': 'cash',
       'iconName': 'attach_money',
@@ -64,12 +64,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   void initState() {
     super.initState();
 
+    // Khởi tạo các trường thông tin từ SessionManager
     _nameController.text = SessionManager.currentCustomerName ?? '';
     _phoneController.text = SessionManager.currentCustomerPhone ?? '';
     _addressController.text = SessionManager.currentCustomerAddress ?? '';
-    _loadPaymentMethods();
+
+    _loadPaymentMethods(); // Tải phương thức thanh toán
   }
 
+  // Hàm tải phương thức thanh toán từ Firestore
   Future<void> _loadPaymentMethods() async {
     setState(() {
       _isLoadingPaymentMethods = true;
@@ -78,7 +81,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       QuerySnapshot paymentMethodsSnapshot =
           await FirebaseFirestore.instance
               .collection('paymentMethods')
-              .where('isActive', isEqualTo: true)
               .orderBy('sortOrder')
               .get();
 
@@ -87,9 +89,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             paymentMethodsSnapshot.docs
                 .map((doc) => PaymentMethod.fromFirestore(doc))
                 .toList();
+
         if (mounted) {
           setState(() {
             _availablePaymentMethods = loadedMethods;
+            // Chọn phương thức thanh toán mặc định là "Tiền mặt" nếu có,
+            // nếu không thì chọn phương thức đầu tiên
             if (_availablePaymentMethods.isNotEmpty) {
               _selectedPaymentMethod = _availablePaymentMethods.firstWhere(
                 (method) => method.id == 'cash',
@@ -99,7 +104,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           });
         }
       } else {
-        // Fallback to static list if Firestore is empty or error
+        // Fallback to static list if Firestore is empty
         _useStaticPaymentMethods();
         print(
           "Không có PTTT nào từ Firestore hoặc collection rỗng, sử dụng PTTT tĩnh.",
@@ -110,7 +115,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _useStaticPaymentMethods(); // Sử dụng PTTT tĩnh nếu có lỗi
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Lỗi tải PTTT. Đang sử dụng danh sách dự phòng.'),
           ),
         );
@@ -124,29 +129,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  // Hàm sử dụng phương thức thanh toán tĩnh khi có lỗi hoặc không có dữ liệu từ Firestore
   void _useStaticPaymentMethods() {
     if (mounted) {
       setState(() {
         _availablePaymentMethods =
             _staticPaymentMethodsForFallback.map((data) {
-              // Tạo tạm DocumentSnapshot giả để dùng chung fromFirestore
-              // Hoặc bạn có thể tạo constructor riêng cho PaymentMethod từ Map
-              // Đây là cách đơn giản để tái sử dụng fromFirestore
-              var fakeDocData = Map<String, dynamic>.from(data);
-              fakeDocData.remove(
-                'icon',
-              ); // fromFirestore không cần icon IconData trực tiếp
-
-              // Tạo một DocumentSnapshot giả
+              // Tạo một DocumentSnapshot giả để có thể sử dụng PaymentMethod.fromFirestore
               // Đây là một cách không chính thống, tốt hơn là PaymentMethod có constructor nhận Map
+              var fakeDocData = Map<String, dynamic>.from(data);
+              // Loại bỏ 'iconName' vì fromFirestore không cần IconData trực tiếp
+              fakeDocData.remove('iconName');
+
               var fakeSnapshot = _FakeDocumentSnapshot(
                 data['value'],
                 fakeDocData,
               );
-
               return PaymentMethod.fromFirestore(fakeSnapshot);
             }).toList();
 
+        // Chọn phương thức thanh toán mặc định
         if (_availablePaymentMethods.isNotEmpty) {
           _selectedPaymentMethod = _availablePaymentMethods.firstWhere(
             (method) => method.id == 'cash',
@@ -157,6 +159,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
+  // Hàm hiển thị dialog chỉnh sửa thông tin giao hàng
   void _showEditDialog() {
     TextEditingController tempNameController = TextEditingController(
       text: _nameController.text,
@@ -167,48 +170,57 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     TextEditingController tempAddressController = TextEditingController(
       text: _addressController.text,
     );
-    final dialogFormKey = GlobalKey<FormState>();
+    final dialogFormKey =
+        GlobalKey<FormState>(); // Key riêng cho form trong dialog
 
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Chỉnh sửa thông tin giao hàng'),
+          title: const Text('Chỉnh sửa thông tin giao hàng'),
           content: SingleChildScrollView(
             child: Form(
               key: dialogFormKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    controller: tempNameController,
-                    decoration: InputDecoration(labelText: 'Họ và tên'),
+                  // SỬ DỤNG HÀM HELPER _buildInfoTextFormField Ở ĐÂY
+                  _buildInfoTextFormField(
+                    tempNameController,
+                    'Họ và tên',
+                    Icons.person_outline,
                     validator:
                         (value) =>
                             value == null || value.isEmpty
                                 ? 'Vui lòng nhập họ tên'
                                 : null,
+                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
                   ),
-                  SizedBox(height: 8),
-                  TextFormField(
-                    controller: tempPhoneController,
-                    decoration: InputDecoration(labelText: 'Số điện thoại'),
+                  const SizedBox(height: 8),
+                  _buildInfoTextFormField(
+                    tempPhoneController,
+                    'Số điện thoại',
+                    Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
                     validator:
                         (value) =>
                             value == null || value.isEmpty
                                 ? 'Vui lòng nhập số điện thoại'
                                 : null,
+                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
                   ),
-                  SizedBox(height: 8),
-                  TextFormField(
-                    controller: tempAddressController,
-                    decoration: InputDecoration(labelText: 'Địa chỉ nhận hàng'),
+                  const SizedBox(height: 8),
+                  _buildInfoTextFormField(
+                    tempAddressController,
+                    'Địa chỉ nhận hàng',
+                    Icons.home_outlined,
+                    maxLines: 2,
                     validator:
                         (value) =>
                             value == null || value.isEmpty
                                 ? 'Vui lòng nhập địa chỉ'
                                 : null,
+                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
                   ),
                 ],
               ),
@@ -216,11 +228,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
           actions: [
             TextButton(
-              child: Text('Hủy'),
-              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Hủy'),
+              onPressed: () => Navigator.pop(dialogContext), // Đóng dialog
             ),
             ElevatedButton(
-              child: Text('Lưu'),
+              child: const Text('Lưu'),
               onPressed: () {
                 if (dialogFormKey.currentState!.validate()) {
                   setState(() {
@@ -228,7 +240,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _phoneController.text = tempPhoneController.text;
                     _addressController.text = tempAddressController.text;
                   });
-                  Navigator.pop(dialogContext);
+                  Navigator.pop(dialogContext); // Đóng dialog sau khi lưu
                 }
               },
             ),
@@ -238,27 +250,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Hàm đặt đơn hàng (gửi dữ liệu lên Firestore và điều hướng)
   Future<void> _placeOrder() async {
-    FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
+    FocusScope.of(context).unfocus(); // Ẩn bàn phím nếu đang hiển thị
+
+    // Kiểm tra validation của form chính
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Kiểm tra các điều kiện cần thiết trước khi đặt hàng
     if (widget.checkoutItems.isEmpty) {
-      /* ... */
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Giỏ hàng trống! Không thể đặt hàng.')),
+      );
       return;
     }
     if (widget.customerId == null) {
-      /* ... */
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Lỗi: Không tìm thấy ID khách hàng. Vui lòng đăng nhập lại.',
+          ),
+        ),
+      );
       return;
     }
     if (_selectedPaymentMethod == null) {
-      /* ... */
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn phương thức thanh toán.')),
+      );
       return;
     }
 
     setState(() {
-      _isPlacingOrder = true;
+      _isPlacingOrder = true; // Bắt đầu trạng thái đang đặt hàng
     });
 
+    // Tạo orderId theo cấu trúc DH + timestamp
     String orderId = 'DH${DateTime.now().millisecondsSinceEpoch}';
+
+    // Chuẩn bị danh sách sản phẩm để lưu vào Firestore
     List<Map<String, dynamic>> orderItemsForFirestore =
         widget.checkoutItems.map((item) {
           return {
@@ -266,28 +298,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             'name': item.name,
             'price': item.price,
             'quantity': item.quantity,
-            'imageUrl': item.imageAssetPath,
+            'imageUrl':
+                item.imageAssetPath, // Đảm bảo trường này có trong CartItem model
           };
         }).toList();
 
+    // Dữ liệu đơn hàng để lưu vào Firestore
     Map<String, dynamic> orderData = {
-      'orderId': orderId,
       'customerId': widget.customerId,
-      'customerName': _nameController.text.trim(),
-      'customerPhone': _phoneController.text.trim(),
-      'customerAddress': _addressController.text.trim(),
+      'customerInfo': {
+        // Lưu thông tin khách hàng dưới dạng map lồng nhau
+        'name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'address': _addressController.text.trim(),
+      },
       'paymentMethod': _selectedPaymentMethod!.title,
       'totalAmount': widget.totalAmount,
       'items': orderItemsForFirestore,
       'status': 'Chờ xác nhận',
-      'createdAt': FieldValue.serverTimestamp(),
+      'orderDate':
+          FieldValue.serverTimestamp(), // Sử dụng FieldValue.serverTimestamp() cho thời gian chính xác
+      'employeeId':
+          'NV000', // Ví dụ: ID nhân viên mặc định hoặc lấy từ session/admin
+      'notes': '', // Trường ghi chú
     };
 
     try {
+      // Lưu đơn hàng vào collection 'orders' với orderId làm document ID
       await FirebaseFirestore.instance
           .collection('orders')
           .doc(orderId)
           .set(orderData);
+
+      // Xóa các sản phẩm khỏi giỏ hàng của khách hàng (sử dụng WriteBatch để hiệu quả hơn)
       WriteBatch batch = FirebaseFirestore.instance.batch();
       for (var item in widget.checkoutItems) {
         DocumentReference cartItemRef = FirebaseFirestore.instance
@@ -300,28 +343,53 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await batch.commit();
 
       if (mounted) {
+        // RẤT QUAN TRỌNG: Đóng AlertDialog xác nhận trước khi điều hướng
+        // `context` ở đây là context của _CheckoutScreenState, nhưng khi _placeOrder
+        // được gọi từ onPressed của Elevated Button trong AlertDialog, `context`
+        // có thể được hiểu là context của cái nút đó, giúp pop chính cái AlertDialog.
+        // Dù sao, `Navigator.pop(context)` ở đây là chính xác.
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context); // Đóng AlertDialog xác nhận
+        }
+
+        // Điều hướng đến màn hình xác nhận đơn hàng và thay thế màn hình hiện tại
+        // Điều này ngăn người dùng quay lại màn hình checkout bằng nút back
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder:
                 (context) => OrderConfirmationScreen(
-                  orderId: orderId,
-                  name: _nameController.text,
-                  phone: _phoneController.text,
-                  address: _addressController.text,
-                  paymentMethod: _selectedPaymentMethod!.title,
-                  totalAmount: widget.totalAmount,
-                  orderedItems: widget.checkoutItems,
+                  orderId: orderId, // Truyền ID đơn hàng
+                  name: _nameController.text, // Truyền tên khách hàng
+                  phone: _phoneController.text, // Truyền số điện thoại
+                  address: _addressController.text, // Truyền địa chỉ
+                  paymentMethod:
+                      _selectedPaymentMethod!
+                          .title, // Truyền phương thức thanh toán
+                  totalAmount: widget.totalAmount, // Truyền tổng tiền
+                  orderedItems:
+                      widget.checkoutItems, // Truyền danh sách sản phẩm đã đặt
                 ),
           ),
         );
       }
     } catch (e) {
-      /* ... */
+      print("Lỗi khi đặt hàng: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đặt hàng thất bại. Vui lòng thử lại. Lỗi: $e'),
+          ),
+        );
+        // Đảm bảo đóng dialog nếu có lỗi xảy ra
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+      }
     } finally {
       if (mounted) {
         setState(() {
-          _isPlacingOrder = false;
+          _isPlacingOrder = false; // Kết thúc trạng thái đang đặt hàng
         });
       }
     }
@@ -334,7 +402,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         title: const Text('Xác nhận đơn hàng'),
         backgroundColor: Color(0xFFBC132C),
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
@@ -343,7 +411,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         child: Stack(
           children: [
             SingleChildScrollView(
-              padding: const EdgeInsets.only(bottom: 100),
+              padding: const EdgeInsets.only(
+                bottom: 100,
+              ), // Khoảng trống cho nút dưới cùng
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -366,9 +436,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             TextButton(
                               onPressed:
                                   _isPlacingOrder ? null : _showEditDialog,
-                              child: Text(
+                              child: const Text(
                                 'Sửa',
-                                style: TextStyle(color: Colors.green),
+                                style: TextStyle(color: Color(0xFFBC132C)),
                               ),
                             ),
                           ],
@@ -380,9 +450,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           Icons.person_outline,
                           validator:
                               (v) => v!.isEmpty ? 'Vui lòng nhập họ tên' : null,
-                          readOnlyStatus: _isPlacingOrder,
+                          readOnlyStatus: true,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildInfoTextFormField(
                           _phoneController,
                           'Số điện thoại',
@@ -390,9 +460,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           keyboardType: TextInputType.phone,
                           validator:
                               (v) => v!.isEmpty ? 'Vui lòng nhập SĐT' : null,
-                          readOnlyStatus: _isPlacingOrder,
+                          readOnlyStatus: true,
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         _buildInfoTextFormField(
                           _addressController,
                           'Địa chỉ nhận hàng',
@@ -401,7 +471,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           validator:
                               (v) =>
                                   v!.isEmpty ? 'Vui lòng nhập địa chỉ' : null,
-                          readOnlyStatus: _isPlacingOrder,
+                          readOnlyStatus: true,
                         ),
                       ],
                     ),
@@ -416,7 +486,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       children: [
                         Text(
                           'Chi tiết sản phẩm (${widget.checkoutItems.length})',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -424,25 +494,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         const SizedBox(height: 12),
                         ListView.separated(
                           shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
+                          physics:
+                              const NeverScrollableScrollPhysics(), // Không cuộn ListView riêng
                           itemCount: widget.checkoutItems.length,
                           separatorBuilder:
                               (context, index) =>
-                                  Divider(height: 16, thickness: 0.5),
+                                  const Divider(height: 16, thickness: 0.5),
                           itemBuilder: (context, index) {
                             final item = widget.checkoutItems[index];
                             return Container(
                               padding: const EdgeInsets.symmetric(vertical: 8),
                               child: Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment
-                                        .spaceBetween, // Căn đều giá ra cuối dòng
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
-                                    // Bọc ảnh và thông tin text vào Row
                                     crossAxisAlignment:
-                                        CrossAxisAlignment
-                                            .start, // Căn ảnh và text theo top
+                                        CrossAxisAlignment.start,
                                     children: [
                                       ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
@@ -456,7 +524,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                 width: 60,
                                                 height: 60,
                                                 color: Colors.grey[200],
-                                                child: Icon(
+                                                child: const Icon(
                                                   Icons.image_not_supported,
                                                   size: 30,
                                                 ),
@@ -469,15 +537,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            // Giới hạn chiều rộng cho tên sản phẩm
                                             width:
                                                 MediaQuery.of(
                                                   context,
                                                 ).size.width *
-                                                0.45, // Ví dụ, 45% chiều rộng màn hình
+                                                0.45,
                                             child: Text(
                                               item.name,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
                                               ),
@@ -500,7 +567,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   // Giá của từng item
                                   Text(
                                     '${(item.price * item.quantity).toStringAsFixed(0)}đ',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -510,17 +577,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             );
                           },
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Divider(
                           height: 1,
                           thickness: 1,
                           color: Colors.grey[300],
-                        ), // Phân cách rõ hơn
-                        SizedBox(height: 8),
+                        ),
+                        const SizedBox(height: 8),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
+                            const Text(
                               'Tổng cộng sản phẩm:',
                               style: TextStyle(
                                 fontSize: 16,
@@ -529,7 +596,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                             Text(
                               '${widget.totalAmount.toStringAsFixed(0)}đ',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFFBC132C),
@@ -557,18 +624,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ),
                         const SizedBox(height: 12),
                         _isLoadingPaymentMethods
-                            ? Center(
+                            ? const Center(
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 20.0,
-                                ),
+                                padding: EdgeInsets.symmetric(vertical: 20.0),
                                 child: CircularProgressIndicator(),
                               ),
                             )
                             : (_availablePaymentMethods.isEmpty
-                                ? Center(
+                                ? const Center(
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(
+                                    padding: EdgeInsets.symmetric(
                                       vertical: 20.0,
                                     ),
                                     child: Text(
@@ -580,12 +645,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   children:
                                       _availablePaymentMethods.map((method) {
                                         return Opacity(
-                                          // --- THÊM Lại DÒNG SAU ---
                                           opacity:
                                               _isPlacingOrder
                                                   ? 0.5
                                                   : 1.0, // Làm mờ nếu đang đặt hàng
-                                          // --------------------------
                                           child: Container(
                                             margin: const EdgeInsets.symmetric(
                                               vertical: 6,
@@ -637,7 +700,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                     _selectedPaymentMethod,
                                                 onChanged:
                                                     _isPlacingOrder
-                                                        ? null
+                                                        ? null // Không cho phép chọn khi đang đặt hàng
                                                         : (
                                                           PaymentMethod? value,
                                                         ) {
@@ -650,7 +713,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               ),
                                               onTap:
                                                   _isPlacingOrder
-                                                      ? null
+                                                      ? null // Không cho phép chọn khi đang đặt hàng
                                                       : () {
                                                         setState(() {
                                                           _selectedPaymentMethod =
@@ -691,12 +754,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                   onPressed:
                       _isPlacingOrder
-                          ? null
+                          ? null // Vô hiệu hóa nút nếu đang xử lý
                           : () {
                             if (_formKey.currentState!.validate()) {
                               if (_selectedPaymentMethod == null) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
+                                  const SnackBar(
                                     content: Text(
                                       'Vui lòng chọn phương thức thanh toán.',
                                     ),
@@ -705,9 +768,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 return;
                               }
                               showDialog(
-                                context: context,
-                                barrierDismissible: !_isPlacingOrder,
+                                context:
+                                    context, // Context của màn hình CheckoutScreen
+                                barrierDismissible:
+                                    !_isPlacingOrder, // Không cho phép đóng bằng cách chạm ra ngoài khi đang xử lý
                                 builder: (dialogContext) {
+                                  // Context của AlertDialog
                                   return AlertDialog(
                                     title: const Text('Xác nhận đặt hàng'),
                                     content: const Text(
@@ -721,42 +787,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                 ? null
                                                 : () => Navigator.pop(
                                                   dialogContext,
-                                                ),
+                                                ), // Đóng dialog bằng dialogContext
                                       ),
                                       ElevatedButton(
                                         onPressed:
                                             _isPlacingOrder
-                                                ? null
+                                                ? null // Vô hiệu hóa nút nếu đang xử lý
                                                 : () {
-                                                  _placeOrder()
-                                                      .then((_) {
-                                                        if (mounted &&
-                                                            Navigator.canPop(
-                                                              dialogContext,
-                                                            )) {
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                          );
-                                                        }
-                                                      })
-                                                      .catchError((error) {
-                                                        // Xử lý lỗi ở đây nếu cần, ví dụ đóng dialog và báo lỗi
-                                                        print(
-                                                          "Lỗi trong _placeOrder, dialog có thể vẫn mở: $error",
-                                                        );
-                                                        if (mounted &&
-                                                            Navigator.canPop(
-                                                              dialogContext,
-                                                            )) {
-                                                          Navigator.pop(
-                                                            dialogContext,
-                                                          );
-                                                        }
-                                                      });
+                                                  // Gọi hàm _placeOrder để xử lý logic và điều hướng
+                                                  // _placeOrder đã được chỉnh sửa để tự đóng dialog và pushReplacement
+                                                  _placeOrder().catchError((
+                                                    error,
+                                                  ) {
+                                                    print(
+                                                      "Lỗi trong _placeOrder (từ dialog): $error",
+                                                    );
+                                                    // Xử lý lỗi nếu cần, ví dụ: hiển thị SnackBar
+                                                  });
                                                 },
                                         child:
                                             _isPlacingOrder
-                                                ? SizedBox(
+                                                ? const SizedBox(
                                                   width: 20,
                                                   height: 20,
                                                   child:
@@ -765,7 +816,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                         strokeWidth: 3,
                                                       ),
                                                 )
-                                                : const Text('Đồng ý'),
+                                                : const Text(
+                                                  'Đồng ý',
+                                                ), // Văn bản nút
                                       ),
                                     ],
                                   );
@@ -774,8 +827,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             }
                           },
                   child:
-                      _isPlacingOrder
-                          ? Row(
+                      _isPlacingOrder // Hiển thị loading spinner hoặc văn bản
+                          ? const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               SizedBox(
@@ -813,6 +866,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // Widget helper để tạo các TextFormField thông tin
   Widget _buildInfoTextFormField(
     TextEditingController controller,
     String labelText,
@@ -822,6 +876,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     bool readOnlyStatus = false,
     int? maxLines = 1,
   }) {
+    // Định nghĩa viền không có gì (transparent)
+    final InputBorder _noBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none, // Loại bỏ hoàn toàn viền
+    );
+
+    // Định nghĩa viền mặc định khi không phải readOnly
+    final InputBorder _defaultBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    );
+
+    // Định nghĩa viền khi được focus (không phải readOnly)
+    final InputBorder _focusedBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Color(0xFFBC132C), width: 1.5),
+    );
+
+    // Định nghĩa viền khi có lỗi (không phải readOnly)
+    final InputBorder _errorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Colors.red, width: 1),
+    );
+
+    // Định nghĩa viền khi có lỗi và được focus (không phải readOnly)
+    final InputBorder _focusedErrorBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(8),
+      borderSide: const BorderSide(color: Colors.red, width: 1.5),
+    );
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -837,27 +921,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             readOnlyStatus
                 ? Colors.grey.shade100.withOpacity(0.5)
                 : Colors.grey.shade50,
-        contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide.none,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 12,
+          horizontal: 12,
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Color(0xFFBC132C), width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.red, width: 1),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: Colors.red, width: 1.5),
-        ),
+        // Áp dụng các loại viền dựa trên trạng thái readOnlyStatus
+        // Nếu readOnlyStatus là true, tất cả các viền sẽ là _noBorder
+        border: readOnlyStatus ? _noBorder : _defaultBorder,
+        enabledBorder: readOnlyStatus ? _noBorder : _defaultBorder,
+        focusedBorder: readOnlyStatus ? _noBorder : _focusedBorder,
+        errorBorder: readOnlyStatus ? _noBorder : _errorBorder,
+        focusedErrorBorder: readOnlyStatus ? _noBorder : _focusedErrorBorder,
       ),
     );
   }
@@ -880,15 +954,16 @@ class _FakeDocumentSnapshot implements DocumentSnapshot {
   @override
   bool get exists => true; // Luôn giả sử tồn tại
 
+  // Các phương thức không dùng đến, chỉ cần throw UnimplementedError
   @override
-  SnapshotMetadata get metadata => throw UnimplementedError(); // Không dùng
+  SnapshotMetadata get metadata => throw UnimplementedError();
 
   @override
-  dynamic get(Object field) => _data[field]; // Lấy field
+  dynamic get(Object field) => _data[field];
 
   @override
-  operator [](Object field) => _data[field]; // Lấy field
+  operator [](Object field) => _data[field];
 
   @override
-  DocumentReference<Object?> get reference => throw UnimplementedError(); // Không dùng
+  DocumentReference<Object?> get reference => throw UnimplementedError();
 }

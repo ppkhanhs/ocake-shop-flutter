@@ -171,7 +171,7 @@ class _CartScreenState extends State<CartScreen> {
         title: Text(
           'Giỏ hàng (${_localCartItems.where((i) => i.selected).length} đã chọn)',
         ),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFBC132C),
       ),
       body: Column(
         children: [
