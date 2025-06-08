@@ -1,3 +1,5 @@
+// app_ocake/views/client/screens/checkout_confirm_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:app_ocake/models/cart_item.dart';
 
@@ -9,16 +11,18 @@ class OrderConfirmationScreen extends StatelessWidget {
   final String paymentMethod;
   final double totalAmount;
   final List<CartItem>? orderedItems;
+  final VoidCallback? onNavigateToHomeTab; // <-- NEW: Receive callback
 
   const OrderConfirmationScreen({
-    Key? key, // Thêm Key
+    Key? key,
     required this.orderId,
     required this.name,
     required this.phone,
     required this.address,
     required this.paymentMethod,
     required this.totalAmount,
-    this.orderedItems, // Tham số mới, có thể null nếu không truyền
+    this.orderedItems,
+    this.onNavigateToHomeTab, // <-- NEW: Receive callback
   }) : super(key: key);
 
   @override
@@ -63,7 +67,6 @@ class OrderConfirmationScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // --- Thông tin đơn hàng (giữ nguyên) ---
               Card(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
@@ -91,7 +94,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                       _buildInfoRow(
                         Icons.payment,
                         'Phương thức TT: $paymentMethod',
-                      ), // Viết tắt cho gọn
+                      ),
                       const SizedBox(height: 12),
                       Row(
                         children: [
@@ -99,7 +102,7 @@ class OrderConfirmationScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Tổng tiền: ${totalAmount.toStringAsFixed(0)}đ', // Hiển thị double
+                              'Tổng tiền: ${totalAmount.toStringAsFixed(0)}đ',
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -115,7 +118,6 @@ class OrderConfirmationScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
 
-              // --- THÊM PHẦN HIỂN THỊ CHI TIẾT SẢN PHẨM ĐÃ ĐẶT ---
               if (orderedItems != null && orderedItems!.isNotEmpty) ...[
                 Card(
                   shape: RoundedRectangleBorder(
@@ -155,7 +157,6 @@ class OrderConfirmationScreen extends StatelessWidget {
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(8),
                                     child: Image.asset(
-                                      // Giả sử ảnh là asset
                                       item.imageAssetPath,
                                       width: 60,
                                       height: 60,
@@ -223,7 +224,11 @@ class OrderConfirmationScreen extends StatelessWidget {
                     backgroundColor: Color(0xFFBC132C),
                   ),
                   onPressed: () {
-                    // Quay về màn hình đầu tiên của stack (thường là HomeScreen)
+                    // Gọi callback để thay đổi tab trong HomeScreen
+                    if (onNavigateToHomeTab != null) {
+                      onNavigateToHomeTab!();
+                    }
+                    // Đảm bảo OrderConfirmationScreen bị pop khỏi navigation stack
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
                   icon: const Icon(Icons.home, color: Colors.white),
@@ -240,19 +245,18 @@ class OrderConfirmationScreen extends StatelessWidget {
     );
   }
 
-  // Helper widget để tạo các dòng thông tin cho gọn
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 6.0,
-      ), // Thêm padding cho mỗi dòng
+      ),
       child: Row(
         children: [
           Icon(
             icon,
             color: Color(0xFFBC132C),
             size: 20,
-          ), // Kích thước icon nhỏ hơn chút
+          ),
           const SizedBox(width: 10),
           Expanded(child: Text(text, style: const TextStyle(fontSize: 16))),
         ],

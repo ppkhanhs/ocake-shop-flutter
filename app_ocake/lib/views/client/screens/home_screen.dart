@@ -1,8 +1,11 @@
+// File: home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-//   //   }
+
+// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
 import 'package:app_ocake/models/product.dart';
-import 'package:app_ocake/models/category.dart';
+import 'package:app_ocake/models/category.dart'; // Đảm bảo Category model được import
 import 'package:app_ocake/models/branch.dart';
 import 'package:app_ocake/models/promotion.dart';
 import 'cart_screen.dart';
@@ -10,9 +13,12 @@ import 'profile_screen.dart';
 import 'product_detail_screen.dart';
 import 'order_history_screen.dart';
 import '../widgets/product_cart.dart';
+// === THÊM IMPORT MỚI: ===
+import 'product_list_screen.dart'; // Import màn hình danh sách sản phẩm
 // -------------------------------------------------------------
 
-// ... (các import và các class khác giữ nguyên) ...
+// ... (class HomeScreen, _HomeScreenState giữ nguyên như bạn đã cập nhật gần đây) ...
+// Đảm bảo _HomeScreenState không còn chứa AppBar hay thanh tìm kiếm.
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -20,38 +26,36 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Loại bỏ các biến trạng thái liên quan đến chi nhánh, chúng sẽ di chuyển vào HomeContent
-  // Branch? _selectedBranchObject;
-  // List<Branch> _branchesFromDb = [];
-  // bool _isLoadingBranches = true;
-
   int _currentIndex = 0;
-  final List<Widget> _screens = [
-    HomeContent(), // HomeContent sẽ tự quản lý AppBar và tìm kiếm của nó
-    CartScreen(), // CartScreen đã có AppBar riêng
-    OrderHistoryScreen(), // Đảm bảo OrderHistoryScreen cũng có AppBar riêng
-    ProfileScreen(), // ProfileScreen đã có AppBar riêng
-  ];
+
+  void _selectHomeTab() {
+    setState(() {
+      _currentIndex = 0;
+    });
+  }
+
+  late final List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
-    // Loại bỏ hàm _loadBranches() khỏi đây
-    // _loadBranches();
+    _screens = [
+      HomeContent(),
+      CartScreen(onNavigateToHomeTab: _selectHomeTab),
+      OrderHistoryScreen(onNavigateToHomeTab: _selectHomeTab),
+      ProfileScreen(),
+    ];
   }
-
-  // Loại bỏ hàm _loadBranches() khỏi đây
-  // Future<void> _loadBranches() async { ... }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // === BƯỚC 1A: XÓA TOÀN BỘ APPBAR KHỎI ĐÂY ===
-      // appBar: AppBar( ... ),
-
-      body: IndexedStack( // === BƯỚC 1B: BODY GIỜ CHỈ CÓ IndexedStack ===
-        index: _currentIndex,
-        children: _screens,
+      body: Column(
+        children: [
+          Expanded(
+            child: IndexedStack(index: _currentIndex, children: _screens),
+          ),
+        ],
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -94,16 +98,18 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+
 // ===================================================================================
 // Widget HomeContent: Chứa nội dung chính của tab Trang chủ
 // ===================================================================================
+
+// Giữ nguyên _HomeContentState là StatefulWidget
 class HomeContent extends StatefulWidget {
   @override
   _HomeContentState createState() => _HomeContentState();
 }
 
 class _HomeContentState extends State<HomeContent> {
-  // BƯỚC 2B: CHUYỂN CÁC BIẾN STATE VÀ HÀM TẢI CHI NHÁNH TỪ _HomeScreenState SANG ĐÂY
   Branch? _selectedBranchObject;
   List<Branch> _branchesFromDb = [];
   bool _isLoadingBranches = true;
@@ -111,7 +117,7 @@ class _HomeContentState extends State<HomeContent> {
   @override
   void initState() {
     super.initState();
-    _loadBranches(); // Tải chi nhánh khi HomeContent được khởi tạo
+    _loadBranches();
   }
 
   Future<void> _loadBranches() async {
@@ -242,7 +248,6 @@ class _HomeContentState extends State<HomeContent> {
     final productsRef = FirebaseFirestore.instance.collection('products');
     final categoriesRef = FirebaseFirestore.instance.collection('categories');
 
-    // BƯỚC 2C: HomeContent TRẢ VỀ Scaffold RIÊNG
     return Scaffold(
       appBar: AppBar( // APPBAR CHO RIÊNG MÀN HÌNH HOME
         backgroundColor: Color(0xFFBC132C),
@@ -372,8 +377,8 @@ class _HomeContentState extends State<HomeContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container( // BƯỚC 2D: CHUYỂN CONTAINER TÌM KIẾM VÀO ĐÂY (VÀO BODY CỦA HomeContent)
-              color: Color(0xFFBC132C), // Đảm bảo màu sắc khớp với AppBar
+            Container( // Thanh tìm kiếm
+              color: Color(0xFFBC132C),
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Container(
                 decoration: BoxDecoration(
@@ -399,91 +404,58 @@ class _HomeContentState extends State<HomeContent> {
                     ),
                   ),
                   onSubmitted: (value) {
-                    print('Tìm kiếm: $value');
+                    // === ĐIỀU HƯỚNG ĐẾN ProductListScreen KHI TÌM KIẾM ===
+                    if (value.isNotEmpty) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductListScreen(
+                            searchQuery: value,
+                          ),
+                        ),
+                      );
+                    }
+                    // ===============================================
                   },
                 ),
               ),
             ),
-            _buildSectionTitle('Deal hot mỗi ngày'),
-            Container(
-              height: 270,
-              child: StreamBuilder<QuerySnapshot>(
-                  stream:
-                      productsRef
-                          .where('isAvailable', isEqualTo: true)
-                          .where(
-                            'promotionIds',
-                            isNotEqualTo: null,
-                          )
-                          .where(
-                            'promotionIds',
-                            isNotEqualTo: "",
-                          )
-                          .limit(
-                            10,
-                          )
-                          .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting)
-                      return _buildLoadingIndicator();
-                    if (snapshot.hasError)
-                      return _buildErrorWidget(
-                        'Deal Hot',
-                        snapshot.error.toString(),
-                      );
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
-                      return _buildEmptyWidget('Chưa có deal hot nào');
-
-                    return FutureBuilder<List<Product>>(
-                      future: _fetchProductsWithPromotions(snapshot.data!),
-                      builder: (context, processedSnapshot) {
-                        if (processedSnapshot.connectionState ==
-                            ConnectionState.waiting)
-                          return _buildLoadingIndicator();
-                        if (processedSnapshot.hasError)
-                          return _buildErrorWidget(
-                            'Deal Hot (promotions)',
-                            processedSnapshot.error.toString(),
-                          );
-
-                        final hotDealProducts =
-                            processedSnapshot.data
-                                ?.where(
-                                  (p) =>
-                                      p.calculatedDiscountPrice != null &&
-                                      p.calculatedDiscountPrice! < p.price,
-                                )
-                                .take(6)
-                                .toList() ??
-                            [];
-
-                        if (hotDealProducts.isEmpty)
-                          return _buildEmptyWidget(
-                            'Chưa có deal hot nào hấp dẫn',
-                          );
-
-                        return ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          itemCount: hotDealProducts.length,
-                          itemBuilder: (context, index) {
-                            final product = hotDealProducts[index];
-                            return Container(
-                              width: 165,
-                              margin: EdgeInsets.only(right: 12),
-                              child: ProductCart(
-                                product: product,
-                                onTap: () => _navigateToDetail(context, product),
-                              ),
-                            );
-                          },
+            // Phần banner "Hot"
+            _buildSectionTitle('Hot'),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: AspectRatio(
+                  aspectRatio: 2048 / 748,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10.0),
+                    child: Image.asset(
+                      'assets/images/banner_tiec-nhe.jpg', // Thay đổi đường dẫn ảnh của bạn
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: Center(
+                            child: Icon(Icons.broken_image, color: Colors.grey[600], size: 50),
+                          ),
                         );
                       },
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
-            SizedBox(height: 20),
+            ),
+            const SizedBox(height: 20),
 
             _buildSectionTitle('Danh mục sản phẩm'),
             Container(
@@ -516,9 +488,17 @@ class _HomeContentState extends State<HomeContent> {
                         margin: EdgeInsets.only(right: 12),
                         child: InkWell(
                           onTap: () {
-                            print(
-                              'Đã chọn danh mục: ${category.name} (ID: ${category.id})',
+                            // === ĐIỀU HƯỚNG ĐẾN ProductListScreen KHI CHỌN DANH MỤC ===
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProductListScreen(
+                                  categoryId: category.id,
+                                  categoryName: category.name,
+                                ),
+                              ),
                             );
+                            // ================================================
                           },
                           borderRadius: BorderRadius.circular(10),
                           child: Column(
@@ -577,7 +557,7 @@ class _HomeContentState extends State<HomeContent> {
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             _buildSectionTitle('Sản phẩm bán chạy'),
             Container(
@@ -637,7 +617,7 @@ class _HomeContentState extends State<HomeContent> {
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             _buildSectionTitle('Khám phá thêm'),
             Padding(
@@ -648,14 +628,13 @@ class _HomeContentState extends State<HomeContent> {
                   if (processedSnapshot.connectionState ==
                       ConnectionState.waiting) {
                     return GridView.builder(
-                      // Đảm bảo physics: NeverScrollableScrollPhysics() đã được xóa như lần sửa trước
                       shrinkWrap: true,
-                      itemCount: 6, // Số lượng placeholder
+                      itemCount: 6,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Số cột
-                        mainAxisSpacing: 12, // Khoảng cách dọc
-                        crossAxisSpacing: 12, // Khoảng cách ngang
-                        childAspectRatio: 0.70, // Tỉ lệ của item
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.70,
                       ),
                       itemBuilder:
                           (context, index) => Container(
@@ -677,7 +656,6 @@ class _HomeContentState extends State<HomeContent> {
 
                   final allProducts = processedSnapshot.data!.docs;
                   return GridView.builder(
-                    // Đảm bảo physics: NeverScrollableScrollPhysics() đã được xóa như lần sửa trước
                     shrinkWrap: true,
                     itemCount: allProducts.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -697,10 +675,10 @@ class _HomeContentState extends State<HomeContent> {
                 },
               ),
             ),
-            SizedBox(height: 30),
-        ],
+            const SizedBox(height: 30),
+          ],
+        ),
       ),
-    ),
     );
   }
 }

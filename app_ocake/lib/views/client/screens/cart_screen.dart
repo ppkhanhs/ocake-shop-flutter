@@ -1,15 +1,19 @@
+// app_ocake/views/client/screens/cart_screen.dart
+
 import 'package:app_ocake/views/client/screens/checkout_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart'; // Cho listEquals
+import 'package:flutter/foundation.dart';
 
-// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
 import 'package:app_ocake/models/cart_item.dart';
-import 'login_screen.dart'; // Để điều hướng nếu chưa đăng nhập
-// Đảm bảo SessionManager được import đúng
-import 'package:app_ocake/services/database/session_manager.dart'; // Hoặc đường dẫn đúng của bạn
+import 'login_screen.dart';
+import 'package:app_ocake/services/database/session_manager.dart';
 
 class CartScreen extends StatefulWidget {
+  final VoidCallback? onNavigateToHomeTab;
+
+  const CartScreen({Key? key, this.onNavigateToHomeTab}) : super(key: key);
+
   @override
   _CartScreenState createState() => _CartScreenState();
 }
@@ -18,6 +22,11 @@ class _CartScreenState extends State<CartScreen> {
   String? _currentCustomerIdFromSession;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _cartStream;
   List<CartItem> _localCartItems = [];
+
+  // ... (các hàm initState, _loadCartData, didChangeDependencies,
+  // _initializeCartStream, _customerCartCollection,
+  // updateQuantityOnFirestore, deleteItemFromFirestore,
+  // toggleSelection, calculateTotal giữ nguyên) ...
 
   @override
   void initState() {
@@ -122,6 +131,7 @@ class _CartScreenState extends State<CartScreen> {
           item.selected ? total + (item.price * item.quantity) : total,
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +386,6 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
               child: Column(
-                // Phải là Column ở đây
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Row(
@@ -401,7 +410,6 @@ class _CartScreenState extends State<CartScreen> {
                   ),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    // Dòng 256 trước đây có thể liên quan đến nút này
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFFBC132C),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -425,12 +433,12 @@ class _CartScreenState extends State<CartScreen> {
                                         totalAmount: calculateTotal(),
                                         customerId:
                                             _currentCustomerIdFromSession,
+                                        onNavigateToHomeTab: widget.onNavigateToHomeTab, // <-- TRUYỀN CALLBACK VÀO ĐÂY
                                       ),
                                 ),
                               );
                             }
                             : null,
-                    // Tham số child là bắt buộc cho ElevatedButton
                     child: const Text(
                       'Tiến hành thanh toán',
                       style: TextStyle(
@@ -438,8 +446,8 @@ class _CartScreenState extends State<CartScreen> {
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
-                    ), // <--- SỬA Ở ĐÂY: thêm 'child:'
-                  ), // Dòng 271 trước đây kết thúc ở đây
+                    ),
+                  ),
                 ],
               ),
             ),
