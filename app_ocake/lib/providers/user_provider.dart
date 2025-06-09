@@ -81,7 +81,7 @@ class UserProvider with ChangeNotifier {
     required String name,
     required String phone,
     required String address,
-    // File? newAvatarImage, // Xử lý upload avatar sẽ phức tạp hơn
+    
   }) async {
     _isUpdatingProfile = true;
     notifyListeners();
@@ -90,22 +90,7 @@ class UserProvider with ChangeNotifier {
       'name': name,
       'phoneNumber': phone, // Khớp tên trường trên Firestore
       'address': address,
-      // 'avatarUrl': _currentUser?.avatarUrl, // Giữ lại avatar cũ nếu không đổi
     };
-
-    // TODO: Xử lý logic upload newAvatarImage lên Firebase Storage
-    // và lấy downloadURL để gán vào dataToUpdate['avatarUrl']
-    // String? newAvatarUrl;
-    // if (newAvatarImage != null) {
-    //   newAvatarUrl = await _uploadAvatar(newAvatarImage, customerId);
-    //   if (newAvatarUrl != null) {
-    //     dataToUpdate['avatarUrl'] = newAvatarUrl;
-    //   } else {
-    //     _isUpdatingProfile = false;
-    //     notifyListeners();
-    //     return false; // Lỗi upload ảnh
-    //   }
-    // }
 
     try {
       await FirebaseFirestore.instance

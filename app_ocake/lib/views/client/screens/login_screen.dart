@@ -78,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text("Đăng nhập thành công!"),
-                backgroundColor: Color(0xFFBC132C),
+                backgroundColor: Color.fromARGB(255, 48, 148, 12),
               ),
             );
             Future.delayed(Duration(milliseconds: 500), () {
@@ -129,21 +129,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Align(
-                  //   alignment: Alignment.topLeft,
-                  //   child: IconButton(
-                  //     icon: const Icon(Icons.close),
-                  //     onPressed: () {
-                  //       if (Navigator.canPop(context)) {
-                  //         Navigator.pop(context);
-                  //       } else {
-                  //         print(
-                  //           "LoginScreen: Không thể pop, có thể là màn hình root",
-                  //         );
-                  //       }
-                  //     },
-                  //   ),
-                  // ),
                   const SizedBox(height: 20),
                   Center(
                     child: Column(

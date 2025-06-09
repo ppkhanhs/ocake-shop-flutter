@@ -18,6 +18,7 @@ class OrderHistoryDetailScreen extends StatefulWidget {
 
 class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
   Future<OrderModel?>? _orderFuture; // Future để tải thông tin chính của đơn hàng
+  bool _isCancelling = false; // Biến trạng thái khi đang hủy đơn hàng
 
   @override
   void initState() {
@@ -34,7 +35,6 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
           .get();
 
       if (doc.exists) {
-        // OrderModel.fromFirestore đã chịu trách nhiệm parse cả list items
         return OrderModel.fromFirestore(doc);
       } else {
         print('Không tìm thấy đơn hàng với ID: ${widget.orderDocumentId}');
@@ -42,9 +42,66 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
       }
     } catch (e) {
       print('Lỗi khi tải thông tin chi tiết đơn hàng: $e');
-      // In StackTrace để debug dễ hơn
-      // print(e.stackTrace); // Kích hoạt nếu muốn thấy call stack
       return null;
+    }
+  }
+
+  // HÀM MỚI: Xử lý logic hủy đơn hàng
+  Future<void> _confirmCancelOrder(String orderId) async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false, // Người dùng phải nhấn nút để đóng
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Xác nhận hủy đơn hàng'),
+          content: const Text('Bạn có chắc chắn muốn hủy đơn hàng này không? Hành động này không thể hoàn tác.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Không'),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            ElevatedButton(
+              child: const Text('Có, Hủy đơn'),
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      setState(() {
+        _isCancelling = true;
+      });
+      try {
+        await FirebaseFirestore.instance.collection('orders').doc(orderId).update({
+          'status': 'Đã hủy', // Cập nhật trạng thái thành 'Đã hủy'
+          'cancelledAt': FieldValue.serverTimestamp(), // Tùy chọn: Thêm thời gian hủy
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đơn hàng đã được hủy thành công!'), backgroundColor: Colors.green),
+          );
+          // Tải lại thông tin đơn hàng để UI hiển thị trạng thái mới
+          setState(() {
+            _orderFuture = _loadOrderHeader(); // Re-fetch data
+          });
+        }
+      } catch (e) {
+        print("Lỗi khi hủy đơn hàng: $e");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Hủy đơn hàng thất bại: ${e.toString()}')),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isCancelling = false;
+          });
+        }
+      }
     }
   }
 
@@ -70,7 +127,6 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
             return const Center(child: CircularProgressIndicator());
           }
           if (orderSnapshot.hasError || !orderSnapshot.hasData || orderSnapshot.data == null) {
-            // In lỗi chi tiết ra console nếu có
             if (orderSnapshot.hasError) {
               print("OrderHistoryDetailScreen Error: ${orderSnapshot.error}");
             }
@@ -79,7 +135,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
 
           final order = orderSnapshot.data!;
 
-          return SingleChildScrollView( // Bọc trong SingleChildScrollView để toàn bộ nội dung cuộn được
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -100,7 +156,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                 ),
                 const SizedBox(height: 8),
                 _buildInfoRow(Icons.person, 'Tên: ${order.customerName}'),
-                _buildInfoRow(Icons.phone, 'SĐT: ${order.customerPhoneNumber}'), // Đảm bảo dùng customerPhone
+                _buildInfoRow(Icons.phone, 'SĐT: ${order.customerPhoneNumber}'),
                 _buildInfoRow(
                   Icons.location_on,
                   'Địa chỉ: ${order.customerAddress}',
@@ -119,30 +175,28 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // TRUY CẬP TRỰC TIẾP order.items ĐÃ ĐƯỢC LOAD CÙNG OrderModel
                 if (order.items.isEmpty)
                   const Center(
                     child: Text("Không có sản phẩm nào trong đơn hàng này."),
                   )
                 else
                   ListView.builder(
-                    shrinkWrap: true, // Quan trọng: Để ListView không chiếm toàn bộ chiều cao còn lại
-                    physics: const NeverScrollableScrollPhysics(), // Quan trọng: Để ListView không cuộn riêng
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: order.items.length,
                     itemBuilder: (context, index) {
                       final item = order.items[index];
-                      // Tính toán lineItemTotal nếu model chưa có
                       final double lineItemTotal = item.productPrice * item.productQuantity;
                       return buildDetailItem(
-                        item.productImageUrl, // Sử dụng productImageUrl từ OrderDetailItem
-                        item.productName, // Sử dụng name từ OrderDetailItem
-                        '${item.productPrice.toStringAsFixed(0)}đ', // Đơn giá
+                        item.productImageUrl,
+                        item.productName,
+                        '${item.productPrice.toStringAsFixed(0)}đ',
                         item.productQuantity,
-                        lineItemTotal, // Tổng tiền của dòng item này
+                        lineItemTotal,
                       );
                     },
                   ),
-                const Divider(height: 25, thickness: 1), // Divider sau danh sách sản phẩm
+                const Divider(height: 25, thickness: 1),
 
                 // Tổng tiền thanh toán
                 ListTile(
@@ -161,38 +215,80 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Nút "Đặt lại"
-                TextButton(
-                  onPressed: () {
-                    // TODO: Logic đặt lại đơn hàng (ví dụ: thêm các sản phẩm vào giỏ hàng)
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Chức năng đặt lại đang phát triển.')),
-                    );
-                  },
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: const Color(0xFFBC132C),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
+                // HÀNG NÚT ĐẶT LẠI VÀ HỦY ĐƠN HÀNG
+                Row(
+                  children: [
+                    // Nút "Hủy đơn hàng" (Chỉ hiển thị và kích hoạt khi trạng thái là "Chờ xác nhận")
+                    if (order.status == 'Chờ xác nhận')
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(0xFFBC132C),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: _isCancelling
+                              ? null
+                              : () => _confirmCancelOrder(order.id),
+                          child: _isCancelling
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                              : const Text(
+                                  'Hủy đơn hàng',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
                         ),
-                      ],
-                    ),
-                    child: const Text(
-                      "Đặt lại",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
                       ),
-                    ),
-                  ),
+
+                    // Khoảng cách giữa 2 nút nếu cả 2 cùng hiển thị
+
+                    if (order.status == 'Chờ xác nhận' && order.status == 'Đã hủy') // Điều kiện này không bao giờ đúng vì 2 trạng thái khác nhau
+                      const SizedBox(width: 10),
+                    // Nút "Đặt lại" (Chỉ hiển thị khi trạng thái là "Đã hủy")
+                    if (order.status == 'Đã hủy')
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFBC132C),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 4,
+                            shadowColor: Colors.black.withOpacity(0.15),
+                          ),
+                          onPressed: _isCancelling
+                              ? null
+                              : () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Chức năng đặt lại đang phát triển.')),
+                                  );
+                                },
+                          child: const Text(
+                            "Đặt lại",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ],
             ),
@@ -220,7 +316,7 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
   Widget buildStatusOrder(
     String displayOrderId,
     String status,
-    Timestamp orderDate, // Đổi tên createdAt thành orderDate cho rõ ràng
+    Timestamp orderDate,
   ) {
     String formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(orderDate.toDate());
     return Container(
@@ -239,21 +335,23 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
+                  // Thay đổi màu nền của badge trạng thái
                   color: status == "Đã giao hàng"
-                      ? Colors.green[100]
+                      ? Colors.green[100] // Màu nền xanh nhạt cho "Đã giao hàng"
                       : (status.toLowerCase().contains("hủy")
-                          ? Colors.red[100]
-                          : Colors.orange[100]),
+                          ? Colors.red[100] // Màu nền đỏ nhạt cho "Hủy"
+                          : Colors.orange[100]), // Màu nền cam nhạt cho các trạng thái khác (chờ xác nhận, đang xử lý)
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   status,
                   style: TextStyle(
+                    // Thay đổi màu chữ của badge trạng thái
                     color: status == "Đã giao hàng"
-                        ? const Color(0xFFBC132C) // Màu chính (đỏ) cho "Đã giao hàng" có vẻ hơi lạ, thường là xanh
+                        ? Colors.green[800] // Màu chữ xanh đậm cho "Đã giao hàng"
                         : (status.toLowerCase().contains("hủy")
-                            ? Colors.red[800]
-                            : Colors.orange[800]),
+                            ? Colors.red[800] // Màu chữ đỏ đậm cho "Hủy"
+                            : Color(0xFFBC132C)), // Màu chữ cam đậm cho các trạng thái khác
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),

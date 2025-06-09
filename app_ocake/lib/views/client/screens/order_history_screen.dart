@@ -217,10 +217,19 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget buildOrderHistoryItem(BuildContext context, OrderModel order) {
     String formattedDate = DateFormat('dd/MM/yyyy HH:mm').format(order.orderDate.toDate());
 
-    // Lấy ảnh từ sản phẩm đầu tiên trong đơn hàng, hoặc ảnh placeholder
     String representativeImage = (order.items.isNotEmpty && order.items.first.productImageUrl.isNotEmpty)
         ? order.items.first.productImageUrl
-        : 'assets/images/placeholder_order.png'; // Đảm bảo ảnh này tồn tại
+        : 'assets/images/placeholder_order.png';
+
+    String firstProductName = order.items.isNotEmpty
+        ? order.items.first.productName
+        : 'Đơn hàng trống';
+
+    // Tính số lượng sản phẩm khác
+    int otherProductsCount = order.items.length > 1 ? order.items.length - 1 : 0;
+    String otherProductsText = otherProductsCount > 0
+        ? 'và ${otherProductsCount} sản phẩm khác' // Đổi định dạng text
+        : '';
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6.0, horizontal: 8.0),
@@ -228,7 +237,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: InkWell(
         onTap: () {
-          // Điều hướng đến màn hình chi tiết đơn hàng
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -245,7 +253,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset( // Sử dụng Image.asset vì ảnh bạn lưu là asset
+                child: Image.asset(
                   representativeImage,
                   width: 60,
                   height: 60,
@@ -264,13 +272,29 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Mã ĐH: ${order.id}",
+                      firstProductName,
                       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
+                    // === THÊM DÒNG HIỂN THỊ SỐ LƯỢNG SẢN PHẨM KHÁC TẠI ĐÂY ===
+                    if (otherProductsCount > 0) // Chỉ hiển thị nếu có sản phẩm khác
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 2), // Khoảng cách nhỏ sau tên sản phẩm
+                          Text(
+                            otherProductsText, // "và X sản phẩm khác"
+                            style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                          ),
+                          const SizedBox(height: 4), // Khoảng cách trước dòng ngày đặt
+                        ],
+                      )
+                    else
+                      const SizedBox(height: 4), // Giữ khoảng cách nếu không có sản phẩm khác
+
                     Text(
-                      "Ngày đặt: $formattedDate",
+                      "Ngày đặt: $formattedDate", // <--- KHÔNG CÒN NỐI otherProductsText VÀO ĐÂY
                       style: TextStyle(color: Colors.grey[700], fontSize: 12),
                     ),
                     const SizedBox(height: 4),

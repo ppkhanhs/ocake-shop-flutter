@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
-// Import LoginScreen nếu bạn muốn đảm bảo Navigator.pop(context) hoạt động đúng
-// import 'login_screen.dart'; // Hoặc tên file login_screen_custom.dart của bạn
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -11,19 +9,16 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final _formKey = GlobalKey<FormState>(); // Thêm GlobalKey cho Form
+  final _formKey = GlobalKey<FormState>();
   final usernameController =
-      TextEditingController(); // Đổi tên thành nameController cho nhất quán
+      TextEditingController();
   final phoneController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
-  // (Tùy chọn) Thêm các controller khác nếu bạn muốn nhập thêm thông tin khi đăng ký
-  // final addressController = TextEditingController();
-  // DateTime? _selectedBirthDate;
 
   bool isPasswordVisible = false;
   bool isConfirmPasswordVisible = false;
-  bool _isLoading = false; // Thêm biến trạng thái loading
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -31,30 +26,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     phoneController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
-    // addressController.dispose(); // Dispose nếu bạn thêm
     super.dispose();
   }
 
-  // --- HÀM XỬ LÝ ĐĂNG KÝ VỚI FIRESTORE ---
   Future<void> _registerWithFirestore() async {
     // Validate form trước
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    // Kiểm tra mật khẩu khớp nhau đã có trong validator của confirmPasswordController
 
     setState(() {
       _isLoading = true;
     });
 
     final name =
-        usernameController.text.trim(); // Lấy tên từ usernameController
+        usernameController.text.trim();
     final phone = phoneController.text.trim();
-    final password = passwordController.text; // Sẽ lưu plaintext
-    // final address = addressController.text.trim(); // Nếu có
+    final password = passwordController.text;
 
     try {
-      // 1. Kiểm tra xem số điện thoại đã tồn tại chưa
       final existingUserQuery =
           await FirebaseFirestore.instance
               .collection('customers') // Tên collection khách hàng của bạn
@@ -76,20 +66,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
-      // 2. Tạo Document ID mới cho customer (Firestore sẽ tự tạo nếu bạn dùng .add())
-      // Hoặc bạn có thể tạo ID tùy chỉnh nếu muốn (ví dụ: "KH" + timestamp)
-      // Sử dụng .add() để Firestore tự tạo ID:
       DocumentReference
       newCustomerRef = await FirebaseFirestore.instance.collection('customers').add({
         'name': name,
         'phoneNumber': phone,
-        'password': password, // LƯU PLAINTEXT - KHÔNG AN TOÀN CHO PRODUCTION
-        'roleId': 'customer', // Giá trị mặc định cho role
-        'createdAt': FieldValue.serverTimestamp(), // Thời gian tạo tài khoản
-        // 'address': address, // Nếu có
-        // 'birthDate': _selectedBirthDate != null ? Timestamp.fromDate(_selectedBirthDate!) : null, // Nếu có
-        // Khởi tạo sub-collection cartItems rỗng (tùy chọn)
-        // Không nhất thiết phải làm ở đây, nó sẽ tự tạo khi item đầu tiên được thêm
+        'password': password,
+        'roleId': 'customer',
+        'createdAt': FieldValue.serverTimestamp(),
+
       });
 
       print('Đăng ký thành công cho user: $name, ID: ${newCustomerRef.id}');
@@ -102,7 +86,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
       );
 
-      // Đợi SnackBar hiển thị xong rồi mới pop
       Future.delayed(const Duration(seconds: 2), () {
         if (mounted) {
           Navigator.pop(context); // Quay lại trang đăng nhập
@@ -141,13 +124,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     child: IconButton(
                       icon: const Icon(
                         Icons.arrow_back,
-                      ), // Đổi thành arrow_back cho nhất quán
+                      ),
                       onPressed: () {
                         Navigator.pop(context);
                       },
                     ),
                   ),
-                  // ... (Phần logo và tiêu đề giữ nguyên) ...
                   const SizedBox(height: 20),
                   Center(
                     child: Column(
@@ -176,7 +158,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 30), // Giảm chút so với 40
 
                   TextFormField(
-                    // Đổi TextField thành TextFormField để dùng với Form
                     controller: usernameController,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.person_outline),
@@ -260,7 +241,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     decoration: InputDecoration(
                       prefixIcon: const Icon(
                         Icons.lock_person_outlined,
-                      ), // Icon khác một chút
+                      ),
                       hintText: "Nhập lại mật khẩu",
                       filled: true,
                       fillColor: Colors.grey[100],
@@ -295,13 +276,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      // Đổi sang ElevatedButton
                       onPressed:
                           _isLoading
                               ? null
-                              : _registerWithFirestore, // Gọi hàm đăng ký mới
+                              : _registerWithFirestore,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFFBC132C), // Màu nền
+                        backgroundColor: Color(0xFFBC132C),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
