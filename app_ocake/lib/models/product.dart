@@ -6,6 +6,7 @@ class Product {
   final String id;
   final String? categoryId;
   final String description;
+  final String nameLowercase;
   final Timestamp? expiryDate;
   final String imageAssetPath;
   final Timestamp? importDate;
@@ -35,6 +36,7 @@ class Product {
     this.importDate,
     required this.name,
     required this.price,
+    required this.nameLowercase,
     this.productionDate,
     this.promotionIds,
     this.isAvailable,
@@ -44,26 +46,27 @@ class Product {
   });
 
   factory Product.fromFirestore(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>? ?? {};
-    String rawImagePath =
-        data['imageUrl'] as String? ?? 'assets/images/placeholder.png';
-    String finalAssetPath =
-        rawImagePath.startsWith('/') ? rawImagePath.substring(1) : rawImagePath;
+    final data = doc.data() as Map<String, dynamic>?;
+
+    if (data == null) {
+      throw StateError('Product document data is null for ID: ${doc.id}');
+    }
+
+    // Đọc trường nameLowercase, nếu không có, tự động tạo từ name (cho dữ liệu cũ)
+    final String name = data['name'] as String? ?? 'N/A';
+    final String nameLowercase = (data['nameLowercase'] as String?) ?? name.toLowerCase(); // <--- ĐỌC HOẶC TẠO
 
     return Product(
       id: doc.id,
-      categoryId: data['categoryId'] as String?,
-      description: data['description'] as String? ?? 'Không có mô tả',
-      expiryDate: data['expiryDate'] as Timestamp?,
-      imageAssetPath: finalAssetPath,
-      importDate: data['importDate'] as Timestamp?,
-      name: data['name'] as String? ?? 'Tên sản phẩm không xác định',
+      name: name,
+      nameLowercase: nameLowercase,
+      description: data['description'] as String? ?? 'N/A',
       price: (data['price'] as num?)?.toDouble() ?? 0.0,
-      productionDate: data['productionDate'] as Timestamp?,
-      promotionIds: data['promotionIds'] as String?, // Đọc promotionIds
-      isAvailable: data['isAvailable'] as bool?,
-      isBestSeller: data['isBestSeller'] as bool?,
-      // activePromotion và calculatedDiscountPrice sẽ được điền sau khi tải dữ liệu promotion
+      imageAssetPath: data['imageUrl'] as String? ?? 'assets/images/placeholder.png',
+      categoryId: data['categoryId'] as String? ?? '',
+      promotionIds: data['promotionIds'] as String?,
+      isAvailable: data['isAvailable'] as bool? ?? true,
+      isBestSeller: data['isBestSeller'] as bool? ?? false,
     );
   }
 
@@ -78,12 +81,11 @@ class Product {
     }
   }
 
-  // Getter để lấy giá hiển thị (ưu tiên giá giảm)
+
   double get displayPrice {
     return calculatedDiscountPrice ?? price;
   }
 
-  // Getter để lấy giá gốc (nếu có giá giảm)
   double? get originalPriceForDisplay {
     return (calculatedDiscountPrice != null && calculatedDiscountPrice! < price)
         ? price

@@ -440,7 +440,7 @@ class _HomeContentState extends State<HomeContent> {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(10.0),
                     child: Image.asset(
-                      'assets/images/banner_tiec-nhe.jpg', // Thay đổi đường dẫn ảnh của bạn
+                      'assets/images/banner_tiec-nhe.jpg',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(

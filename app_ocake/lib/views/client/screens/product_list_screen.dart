@@ -55,21 +55,15 @@ class _ProductListScreenState extends State<ProductListScreen> {
     baseQuery = baseQuery.where('isAvailable', isEqualTo: true);
 
     if (widget.searchQuery != null && widget.searchQuery!.isNotEmpty) {
-      // Nếu có tìm kiếm: lọc theo tên sản phẩm (case-insensitive, bắt đầu bằng)
       String searchLower = widget.searchQuery!.toLowerCase();
       baseQuery = baseQuery
-          .orderBy('name') // Cần orderBy để sử dụng startAt/endAt
+          .orderBy('nameLowercase')
           .startAt([searchLower])
           .endAt([searchLower + '\uf8ff']);
-      // Lưu ý: Đây là cách tìm kiếm "bắt đầu bằng" và đòi hỏi chỉ mục phù hợp.
-      // Tìm kiếm full-text phức tạp hơn thường cần các dịch vụ bên ngoài (Algolia, ElasticSearch).
     } else if (widget.categoryId != null && widget.categoryId!.isNotEmpty) {
-      // Nếu có lọc theo danh mục: lọc theo categoryId
       baseQuery = baseQuery.where('categoryId', isEqualTo: widget.categoryId);
-    }
-    // Nếu không có tìm kiếm hay danh mục cụ thể, mặc định sắp xếp theo tên
-    else {
-      baseQuery = baseQuery.orderBy('name');
+    } else {
+      baseQuery = baseQuery.orderBy('nameLowercase');
     }
 
     _productsStream = baseQuery.snapshots();
@@ -110,9 +104,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
     // Xác định tiêu đề AppBar dựa trên tham số truyền vào
     String appBarTitle = 'Sản phẩm';
     if (widget.searchQuery != null && widget.searchQuery!.isNotEmpty) {
-      appBarTitle = 'Kết quả tìm kiếm: "${widget.searchQuery}"';
+      appBarTitle = '${widget.searchQuery}';
     } else if (widget.categoryName != null && widget.categoryName!.isNotEmpty) {
-      appBarTitle = 'Sản phẩm theo danh mục: ${widget.categoryName}';
+      appBarTitle = '${widget.categoryName}';
     }
 
     return Scaffold(
