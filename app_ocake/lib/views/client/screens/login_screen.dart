@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
 import 'home_screen.dart';
-import 'register_screen.dart'; // Hoặc RegisterScreenCustomForCustomers
+import 'register_screen.dart';
 import 'forgotpassword_screen.dart';
-// 1. IMPORT SESSION MANAGER TỪ FILE RIÊNG CỦA BẠN
-import 'package:app_ocake/services/database/session_manager.dart'; // Đảm bảo đường dẫn này đúng
-// -------------------------------------------------------------
+import 'package:app_ocake/services/database/session_manager.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);

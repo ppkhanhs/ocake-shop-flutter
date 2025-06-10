@@ -42,4 +42,13 @@ class Category {
       // 'sortOrder': sortOrder,
     };
   }
+  
+  Map<String, dynamic> toJsonWithId() {
+    return {
+      'id': id,
+      'name': name,
+      'imageAssetPath': imageAssetPath,
+    };
+  }
 }
+
