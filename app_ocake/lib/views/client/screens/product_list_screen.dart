@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:app_ocake/models/product.dart'; // Đảm bảo import model Product
-import 'package:app_ocake/views/client/widgets/product_cart.dart'; // Đảm bảo import widget ProductCart
-import 'package:app_ocake/views/client/screens/product_detail_screen.dart'; // Đảm bảo import màn hình chi tiết sản phẩm
+import 'package:app_ocake/models/product.dart'; 
+import 'package:app_ocake/views/client/widgets/product_cart.dart'; 
+import 'package:app_ocake/views/client/screens/product_detail_screen.dart';
 
 class ProductListScreen extends StatefulWidget {
-  final String? searchQuery; // Tham số để tìm kiếm theo tên sản phẩm
-  final String? categoryId;   // Tham số để lọc theo ID danh mục
-  final String? categoryName; // Tham số để hiển thị tên danh mục trên AppBar
+  final String? searchQuery;
+  final String? categoryId; 
+  final String? categoryName;
 
   const ProductListScreen({
     Key? key,
@@ -131,13 +131,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     textAlign: TextAlign.center,
                   ),
                 )
-              : GridView.builder( // Hiển thị danh sách sản phẩm dưới dạng lưới
+              : GridView.builder(
                   padding: const EdgeInsets.all(12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, // 2 cột
-                    mainAxisSpacing: 12, // Khoảng cách dọc
-                    crossAxisSpacing: 12, // Khoảng cách ngang
-                    childAspectRatio: 0.70, // Tỉ lệ khung hình của mỗi item (điều chỉnh cho phù hợp với ProductCart)
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.70,
                   ),
                   itemCount: _products.length,
                   itemBuilder: (context, index) {

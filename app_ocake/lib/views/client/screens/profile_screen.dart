@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
-import 'login_screen.dart'; // Hoặc LoginScreenCustom
-// Import SessionManager từ file riêng của nó
-import 'package:app_ocake/services/database/session_manager.dart'; // Đảm bảo đường dẫn này đúng!
+import 'login_screen.dart';
+import 'package:app_ocake/services/database/session_manager.dart';
 // -------------------------------------------------------------
 
 class ProfileScreen extends StatefulWidget {
@@ -22,11 +19,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
 
-  File? _imageFile; // Ảnh mới được chọn từ gallery (cục bộ)
+  File? _imageFile;
   String?
-  _networkAvatarUrl; // URL ảnh từ Firestore (nếu có) - Giả sử có trường 'avatarUrl'
-  bool _isLoadingData = true; // Trạng thái tải dữ liệu ban đầu
-  bool _isUpdating = false; // Trạng thái đang cập nhật
+  _networkAvatarUrl;
+  bool _isLoadingData = true;
+  bool _isUpdating = false;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -37,15 +34,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserProfile() async {
-    // Không cần setState(_isLoadingData = true) ở đây vì nó đã là true ban đầu
 
     String? customerId =
         SessionManager.currentCustomerId; // Lấy ID từ SessionManager
 
     if (customerId == null) {
       print("ProfileScreen: No Customer ID in session. Cannot load profile.");
-      // Nếu không có customerId, có nghĩa là chưa đăng nhập, không cần tải gì cả.
-      // Hàm build sẽ xử lý việc hiển thị UI "chưa đăng nhập".
       if (mounted) {
         setState(() {
           _isLoadingData = false; // Dừng loading
@@ -75,10 +69,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 '';
             _addressController.text =
                 data['address'] ?? SessionManager.currentCustomerAddress ?? '';
-            // Giả sử bạn có trường 'avatarUrl' trên Firestore để lưu link ảnh đại diện
             _networkAvatarUrl = data['avatarUrl'] as String?;
 
-            // Cập nhật lại SessionManager nếu dữ liệu trên Firestore mới hơn (tùy chọn)
             SessionManager.updateCurrentCustomerInfo(
               name: _nameController.text,
               phone: _phoneController.text,
@@ -129,22 +121,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // TODO: Hàm tải ảnh lên Firebase Storage (Bạn cần triển khai nếu muốn lưu ảnh online)
-  // Future<String?> _uploadAvatarToStorage(File imageFile, String customerId) async {
-  //   try {
-  //     // Cần package firebase_storage
-  //     // final storageRef = FirebaseStorage.instance.ref().child('customer_avatars/$customerId/${DateTime.now().millisecondsSinceEpoch}.jpg');
-  //     // final uploadTask = storageRef.putFile(imageFile);
-  //     // final snapshot = await uploadTask.whenComplete(() => {});
-  //     // final downloadUrl = await snapshot.ref.getDownloadURL();
-  //     // return downloadUrl;
-  //     print("Logic upload ảnh chưa được triển khai");
-  //     return null; // Trả về null nếu chưa có logic upload
-  //   } catch (e) {
-  //     print("Lỗi upload avatar: $e");
-  //     return null;
-  //   }
-  // }
 
   Future<void> _updateProfile() async {
     FocusScope.of(context).unfocus();
@@ -163,21 +139,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     String? newAvatarUrl;
-    // if (_imageFile != null) {
-    //   // newAvatarUrl = await _uploadAvatarToStorage(_imageFile!, customerId);
-    //   // if (newAvatarUrl == null && mounted) { // Lỗi upload ảnh
-    //   //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi tải ảnh lên. Cập nhật thông tin không thành công.')));
-    //   //   setState(() { _isUpdating = false; });
-    //   //   return;
-    //   // }
-    // }
 
     Map<String, dynamic> updatedData = {
       'name': _nameController.text.trim(),
       'phoneNumber': _phoneController.text.trim(),
       'address': _addressController.text.trim(),
-      // if (newAvatarUrl != null) 'avatarUrl': newAvatarUrl,
-      // else if (_networkAvatarUrl != null && _imageFile == null) 'avatarUrl': _networkAvatarUrl, // Giữ ảnh cũ nếu không đổi
     };
 
     try {
@@ -199,8 +165,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             backgroundColor: Color(0xFFBC132C),
           ),
         );
-        // Nếu đã upload ảnh mới thành công, có thể reset _imageFile
-        // setState(() { _imageFile = null; _networkAvatarUrl = newAvatarUrl ?? _networkAvatarUrl; });
       }
     } catch (e) {
       print("Lỗi cập nhật thông tin: $e");
@@ -226,10 +190,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Kiểm tra trạng thái đăng nhập ở đầu hàm build
     if (!SessionManager.isLoggedIn() && !_isLoadingData) {
-      // Nếu không loading và cũng không đăng nhập, điều hướng về Login
-      // Dùng addPostFrameCallback để tránh lỗi setState/navigation trong build
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.of(context).pushAndRemoveUntil(
@@ -256,10 +217,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    // Nếu _isLoadingData là false và SessionManager.isLoggedIn() là true,
-    // nhưng các controller vẫn rỗng (có thể xảy ra nếu _loadUserProfile chưa kịp set)
-    // thì có thể vẫn hiển thị màn hình chính nhưng với các trường trống.
 
     return Scaffold(
       appBar: AppBar(

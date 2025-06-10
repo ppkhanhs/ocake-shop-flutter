@@ -23,11 +23,6 @@ class _CartScreenState extends State<CartScreen> {
   Stream<QuerySnapshot<Map<String, dynamic>>>? _cartStream;
   List<CartItem> _localCartItems = [];
 
-  // ... (các hàm initState, _loadCartData, didChangeDependencies,
-  // _initializeCartStream, _customerCartCollection,
-  // updateQuantityOnFirestore, deleteItemFromFirestore,
-  // toggleSelection, calculateTotal giữ nguyên) ...
-
   @override
   void initState() {
     super.initState();

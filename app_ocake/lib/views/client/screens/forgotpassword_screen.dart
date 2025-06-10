@@ -52,14 +52,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             duration: Duration(seconds: 3),
           ),
         );
-        // TODO: Ở đây bạn có thể điều hướng người dùng đến màn hình nhập OTP
-        // Ví dụ: Navigator.push(context, MaterialPageRoute(builder: (_) => OTPScreen(phoneNumber: phone)));
-        // Hiện tại, chỉ pop về màn hình trước đó (thường là LoginScreen) sau khi thông báo
-        // Future.delayed(const Duration(seconds: 1), () {
-        //   if (mounted && Navigator.canPop(context)) {
-        //     Navigator.pop(context);
-        //   }
-        // });
       }
     });
     // -----------------------------

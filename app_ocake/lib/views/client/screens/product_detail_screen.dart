@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart'; // Cho DateFormat
-
-// --- SỬA LẠI ĐƯỜNG DẪN IMPORT CHO ĐÚNG VỚI DỰ ÁN CỦA BẠN ---
-import 'package:app_ocake/models/product.dart'; // Import model Product
-import '../widgets/product_cart.dart'; // Import ProductCard (hoặc ProductCart)
-// Giả sử SessionManager và hàm thêm vào giỏ hàng có thể được truy cập
+import 'package:intl/intl.dart';
+import 'package:app_ocake/models/product.dart';
+import '../widgets/product_cart.dart';
 import 'package:app_ocake/services/database/session_manager.dart';
 // -------------------------------------------------------------
 
@@ -61,7 +58,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // --- HÀM THÊM VÀO GIỎ HÀNG (TƯƠNG TỰ NHƯ TRONG PRODUCTCARD) ---
   Future<void> _handleAddToCart() async {
     if (!widget.product.isAvailable!) {
       // Kiểm tra isAvailable từ Product model
@@ -91,7 +87,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       setState(() {
         _isAddingToCart = false;
       });
-      // TODO: Có thể điều hướng đến màn hình đăng nhập
       return;
     }
 
@@ -112,7 +107,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         Map<String, dynamic> dataToSet = {
           'productId': widget.product.id,
           'name': widget.product.name,
-          // Sử dụng displayPrice từ model Product (đã tính khuyến mãi nếu có)
           'price': widget.product.displayPrice,
           'quantity': newQuantity,
           'imageUrl': widget.product.imageAssetPath,
@@ -174,11 +168,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           icon: Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        // (Tùy chọn) Thêm nút chia sẻ hoặc yêu thích
-        // actions: [
-        //   IconButton(icon: Icon(Icons.share, color: Colors.white), onPressed: () { /* ... */ }),
-        //   IconButton(icon: Icon(Icons.favorite_border, color: Colors.white), onPressed: () { /* ... */ }),
-        // ],
       ),
       body: Stack(
         children: [
@@ -192,7 +181,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 Hero(
                   tag: 'product_image_${widget.product.id}',
                   child: Container(
-                    // Thêm Container để có thể tạo hiệu ứng nếu ảnh lỗi
                     height: 300, // Tăng chiều cao ảnh sản phẩm
                     width: double.infinity,
                     color: Colors.grey[200], // Màu nền placeholder

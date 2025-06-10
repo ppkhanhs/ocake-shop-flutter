@@ -139,10 +139,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       setState(() {
         _availablePaymentMethods =
             _staticPaymentMethodsForFallback.map((data) {
-              // Tạo một DocumentSnapshot giả để có thể sử dụng PaymentMethod.fromFirestore
-              // Đây là một cách không chính thống, tốt hơn là PaymentMethod có constructor nhận Map
               var fakeDocData = Map<String, dynamic>.from(data);
-              // Loại bỏ 'iconName' vì fromFirestore không cần IconData trực tiếp
+              
               fakeDocData.remove('iconName');
 
               var fakeSnapshot = _FakeDocumentSnapshot(

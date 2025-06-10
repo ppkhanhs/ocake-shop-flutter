@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
-import 'package:app_ocake/models/order.dart'; // Đảm bảo OrderModel đã được cập nhật
-import 'package:app_ocake/models/order_detail_item.dart'; // Đảm bảo OrderDetailItem đã được cập nhật
+import 'package:app_ocake/models/order.dart'; 
+import 'package:app_ocake/models/order_detail_item.dart';
 
 class OrderHistoryDetailScreen extends StatefulWidget {
-  final String orderDocumentId; // Nhận Document ID của đơn hàng (ví dụ: DH001...)
+  final String orderDocumentId;
 
   const OrderHistoryDetailScreen({Key? key, required this.orderDocumentId})
       : super(key: key);
@@ -46,7 +46,6 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
     }
   }
 
-  // HÀM MỚI: Xử lý logic hủy đơn hàng
   Future<void> _confirmCancelOrder(String orderId) async {
     bool? confirm = await showDialog<bool>(
       context: context,
@@ -215,7 +214,6 @@ class _OrderHistoryDetailScreenState extends State<OrderHistoryDetailScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // HÀNG NÚT ĐẶT LẠI VÀ HỦY ĐƠN HÀNG
                 Row(
                   children: [
                     // Nút "Hủy đơn hàng" (Chỉ hiển thị và kích hoạt khi trạng thái là "Chờ xác nhận")
