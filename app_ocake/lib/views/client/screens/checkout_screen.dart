@@ -6,19 +6,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app_ocake/models/cart_item.dart';
 import 'package:app_ocake/models/payment_method.dart';
 import 'package:app_ocake/services/database/session_manager.dart';
+import 'momo_qr_screen.dart'; // Import MomoQrScreen
 
 class CheckoutScreen extends StatefulWidget {
   final List<CartItem> checkoutItems;
   final double totalAmount;
   final String? customerId;
-  final VoidCallback? onNavigateToHomeTab; // <-- NEW: Receive callback
+  final VoidCallback? onNavigateToHomeTab;
 
   const CheckoutScreen({
     Key? key,
     required this.checkoutItems,
     required this.totalAmount,
     this.customerId,
-    this.onNavigateToHomeTab, // <-- NEW: Receive callback
+    this.onNavigateToHomeTab,
   }) : super(key: key);
 
   @override
@@ -30,6 +31,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+
+  final TextEditingController _cardNumberController = TextEditingController();
+  final TextEditingController _cardExpiryController = TextEditingController();
+  final TextEditingController _cardCvcController = TextEditingController();
 
   PaymentMethod? _selectedPaymentMethod;
   List<PaymentMethod> _availablePaymentMethods = [];
@@ -63,42 +68,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     },
   ];
 
-  // ... (initState, _loadPaymentMethods, _useStaticPaymentMethods, _showEditDialog giữ nguyên) ...
   @override
   void initState() {
     super.initState();
-
-    // Khởi tạo các trường thông tin từ SessionManager
     _nameController.text = SessionManager.currentCustomerName ?? '';
     _phoneController.text = SessionManager.currentCustomerPhone ?? '';
     _addressController.text = SessionManager.currentCustomerAddress ?? '';
-
-    _loadPaymentMethods(); // Tải phương thức thanh toán
+    _loadPaymentMethods();
   }
 
-  // Hàm tải phương thức thanh toán từ Firestore
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _cardNumberController.dispose();
+    _cardExpiryController.dispose();
+    _cardCvcController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadPaymentMethods() async {
     setState(() {
       _isLoadingPaymentMethods = true;
     });
     try {
-      QuerySnapshot paymentMethodsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('paymentMethods')
-              .orderBy('sortOrder')
-              .get();
+      QuerySnapshot paymentMethodsSnapshot = await FirebaseFirestore.instance
+          .collection('paymentMethods')
+          .orderBy('sortOrder')
+          .get();
 
       if (paymentMethodsSnapshot.docs.isNotEmpty) {
-        List<PaymentMethod> loadedMethods =
-            paymentMethodsSnapshot.docs
-                .map((doc) => PaymentMethod.fromFirestore(doc))
-                .toList();
+        List<PaymentMethod> loadedMethods = paymentMethodsSnapshot.docs
+            .map((doc) => PaymentMethod.fromFirestore(doc))
+            .toList();
 
         if (mounted) {
           setState(() {
             _availablePaymentMethods = loadedMethods;
-            // Chọn phương thức thanh toán mặc định là "Tiền mặt" nếu có,
-            // nếu không thì chọn phương thức đầu tiên
             if (_availablePaymentMethods.isNotEmpty) {
               _selectedPaymentMethod = _availablePaymentMethods.firstWhere(
                 (method) => method.id == 'cash',
@@ -108,15 +115,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           });
         }
       } else {
-        // Fallback to static list if Firestore is empty
         _useStaticPaymentMethods();
-        print(
-          "Không có PTTT nào từ Firestore hoặc collection rỗng, sử dụng PTTT tĩnh.",
-        );
+        print("Không có PTTT nào từ Firestore hoặc collection rỗng, sử dụng PTTT tĩnh.");
       }
     } catch (e) {
       print("Lỗi tải phương thức thanh toán: $e. Sử dụng PTTT tĩnh.");
-      _useStaticPaymentMethods(); // Sử dụng PTTT tĩnh nếu có lỗi
+      _useStaticPaymentMethods();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -133,24 +137,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  // Hàm sử dụng phương thức thanh toán tĩnh khi có lỗi hoặc không có dữ liệu từ Firestore
   void _useStaticPaymentMethods() {
     if (mounted) {
       setState(() {
-        _availablePaymentMethods =
-            _staticPaymentMethodsForFallback.map((data) {
-              var fakeDocData = Map<String, dynamic>.from(data);
-              
-              fakeDocData.remove('iconName');
+        _availablePaymentMethods = _staticPaymentMethodsForFallback.map((data) {
+          var fakeDocData = Map<String, dynamic>.from(data);
+          fakeDocData.remove('iconName');
+          var fakeSnapshot = _FakeDocumentSnapshot(data['value'], fakeDocData);
+          return PaymentMethod.fromFirestore(fakeSnapshot);
+        }).toList();
 
-              var fakeSnapshot = _FakeDocumentSnapshot(
-                data['value'],
-                fakeDocData,
-              );
-              return PaymentMethod.fromFirestore(fakeSnapshot);
-            }).toList();
-
-        // Chọn phương thức thanh toán mặc định
         if (_availablePaymentMethods.isNotEmpty) {
           _selectedPaymentMethod = _availablePaymentMethods.firstWhere(
             (method) => method.id == 'cash',
@@ -161,24 +157,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  // Hàm hiển thị dialog chỉnh sửa thông tin giao hàng
   void _showEditDialog() {
-    TextEditingController tempNameController = TextEditingController(
-      text: _nameController.text,
-    );
-    TextEditingController tempPhoneController = TextEditingController(
-      text: _phoneController.text,
-    );
-    TextEditingController tempAddressController = TextEditingController(
-      text: _addressController.text,
-    );
-    final dialogFormKey =
-        GlobalKey<FormState>(); // Key riêng cho form trong dialog
+    TextEditingController tempNameController = TextEditingController(text: _nameController.text);
+    TextEditingController tempPhoneController = TextEditingController(text: _phoneController.text);
+    TextEditingController tempAddressController = TextEditingController(text: _addressController.text);
+    final dialogFormKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (dialogContext) {
-        // dialogContext là context của AlertDialog
         return AlertDialog(
           title: const Text('Chỉnh sửa thông tin giao hàng'),
           content: SingleChildScrollView(
@@ -187,53 +174,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // SỬ DỤNG HÀM HELPER _buildInfoTextFormField Ở ĐÂY
                   _buildInfoTextFormField(
-                    tempNameController,
-                    'Họ và tên',
-                    Icons.person_outline,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Vui lòng nhập họ tên'
-                                : null,
-                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
+                    tempNameController, 'Họ và tên', Icons.person_outline,
+                    validator: (value) => value == null || value.isEmpty ? 'Vui lòng nhập họ tên' : null,
+                    readOnlyStatus: false,
                   ),
                   const SizedBox(height: 8),
                   _buildInfoTextFormField(
-                    tempPhoneController,
-                    'Số điện thoại',
-                    Icons.phone_outlined,
+                    tempPhoneController, 'Số điện thoại', Icons.phone_outlined,
                     keyboardType: TextInputType.phone,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Vui lòng nhập số điện thoại'
-                                : null,
-                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
+                    validator: (value) => value == null || value.isEmpty ? 'Vui lòng nhập số điện thoại' : null,
+                    readOnlyStatus: false,
                   ),
                   const SizedBox(height: 8),
                   _buildInfoTextFormField(
-                    tempAddressController,
-                    'Địa chỉ nhận hàng',
-                    Icons.home_outlined,
+                    tempAddressController, 'Địa chỉ nhận hàng', Icons.home_outlined,
                     maxLines: 2,
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Vui lòng nhập địa chỉ'
-                                : null,
-                    readOnlyStatus: false, // CHO PHÉP CHỈNH SỬA VÀ HIỂN THỊ VIỀN
+                    validator: (value) => value == null || value.isEmpty ? 'Vui lòng nhập địa chỉ' : null,
+                    readOnlyStatus: false,
                   ),
                 ],
               ),
             ),
           ),
           actions: [
-            TextButton(
-              child: const Text('Hủy'),
-              onPressed: () => Navigator.pop(dialogContext), // Đóng dialog
-            ),
+            TextButton(child: const Text('Hủy'), onPressed: () => Navigator.pop(dialogContext)),
             ElevatedButton(
               child: const Text('Lưu'),
               onPressed: () {
@@ -243,7 +208,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     _phoneController.text = tempPhoneController.text;
                     _addressController.text = tempAddressController.text;
                   });
-                  Navigator.pop(dialogContext); // Đóng dialog sau khi lưu
+                  Navigator.pop(dialogContext);
                 }
               },
             ),
@@ -253,11 +218,76 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Widget _buildCardPaymentForm() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Thông tin thẻ ngân hàng',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoTextFormField(
+            _cardNumberController, 'Số thẻ', Icons.credit_card,
+            keyboardType: TextInputType.number,
+            validator: (v) => v!.isEmpty || v.length < 16 ? 'Vui lòng nhập đủ 16 số thẻ' : null,
+            readOnlyStatus: _isPlacingOrder,
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildInfoTextFormField(
+                  _cardExpiryController, 'Ngày hết hạn (MM/YY)', Icons.calendar_today,
+                  keyboardType: TextInputType.datetime,
+                  validator: (v) => v!.isEmpty || !RegExp(r'^\d{2}\/\d{2}$').hasMatch(v) ? 'MM/YY' : null,
+                  readOnlyStatus: _isPlacingOrder,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildInfoTextFormField(
+                  _cardCvcController, 'CVC', Icons.lock,
+                  keyboardType: TextInputType.number,
+                  validator: (v) => v!.isEmpty || v.length < 3 ? '3-4 số' : null,
+                  readOnlyStatus: _isPlacingOrder,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _validateCardForm() {
+    if (_selectedPaymentMethod?.id == 'card') {
+      if (_cardNumberController.text.isEmpty || _cardNumberController.text.length < 16) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập số thẻ hợp lệ.')));
+        return false;
+      }
+      if (_cardExpiryController.text.isEmpty || !RegExp(r'^\d{2}\/\d{2}$').hasMatch(_cardExpiryController.text)) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập ngày hết hạn hợp lệ (MM/YY).')));
+        return false;
+      }
+      if (_cardCvcController.text.isEmpty || _cardCvcController.text.length < 3) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng nhập CVC hợp lệ (3-4 số).')));
+        return false;
+      }
+    }
+    return true;
+  }
 
   Future<void> _placeOrder() async {
     FocusScope.of(context).unfocus();
 
     if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (!_validateCardForm()) {
       return;
     }
 
@@ -297,8 +327,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             'name': item.name,
             'price': item.price,
             'quantity': item.quantity,
-            'imageUrl':
-                item.imageAssetPath,
+            'imageUrl': item.imageAssetPath,
           };
         }).toList();
 
@@ -313,12 +342,18 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'totalAmount': widget.totalAmount,
       'items': orderItemsForFirestore,
       'status': 'Chờ xác nhận',
-      'orderDate':
-          FieldValue.serverTimestamp(),
-      'employeeId':
-          'NV000',
+      'orderDate': FieldValue.serverTimestamp(),
+      'employeeId': 'NV000',
       'notes': '',
     };
+
+    if (_selectedPaymentMethod?.id == 'card') {
+      orderData['cardDetails'] = {
+        'cardNumber': _cardNumberController.text.trim(),
+        'cardExpiry': _cardExpiryController.text.trim(),
+        'cardCvc': _cardCvcController.text.trim(),
+      };
+    }
 
     try {
       await FirebaseFirestore.instance
@@ -338,29 +373,44 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       await batch.commit();
 
       if (mounted) {
-        if (Navigator.canPop(context)) {
+        if (Navigator.canPop(context) && ModalRoute.of(context)?.settings.name == 'AlertDialog') {
           Navigator.pop(context);
         }
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => OrderConfirmationScreen(
-                  orderId: orderId,
-                  name: _nameController.text,
-                  phone: _phoneController.text,
-                  address: _addressController.text,
-                  paymentMethod:
-                      _selectedPaymentMethod!
-                          .title,
-                  totalAmount: widget.totalAmount,
-                  orderedItems:
-                      widget.checkoutItems,
-                  onNavigateToHomeTab: widget.onNavigateToHomeTab, // <-- TRUYỀN CALLBACK VÀO ĐÂY
-                ),
-          ),
-        );
+        if (_selectedPaymentMethod?.id == 'momo') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MomoQrScreen(
+                totalAmount: widget.totalAmount,
+                orderId: orderId,
+                // NEW: Truyền các thông tin cần thiết
+                name: _nameController.text,
+                phone: _phoneController.text,
+                address: _addressController.text,
+                paymentMethod: _selectedPaymentMethod!.title,
+                orderedItems: widget.checkoutItems,
+                onNavigateToHomeTab: widget.onNavigateToHomeTab,
+              ),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OrderConfirmationScreen(
+                orderId: orderId,
+                name: _nameController.text,
+                phone: _phoneController.text,
+                address: _addressController.text,
+                paymentMethod: _selectedPaymentMethod!.title,
+                totalAmount: widget.totalAmount,
+                orderedItems: widget.checkoutItems,
+                onNavigateToHomeTab: widget.onNavigateToHomeTab,
+              ),
+            ),
+          );
+        }
       }
     } catch (e) {
       print("Lỗi khi đặt hàng: $e");
@@ -370,7 +420,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             content: Text('Đặt hàng thất bại. Vui lòng thử lại. Lỗi: $e'),
           ),
         );
-        if (Navigator.canPop(context)) {
+        if (Navigator.canPop(context) && ModalRoute.of(context)?.settings.name == 'AlertDialog') {
           Navigator.pop(context);
         }
       }
@@ -626,8 +676,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   ),
                                 )
                                 : Column(
-                                  children:
+                                  children: // LỖI Ở ĐÂY
                                       _availablePaymentMethods.map((method) {
+                                        final bool isMethodSelected = _selectedPaymentMethod?.id == method.id;
                                         return Opacity(
                                           opacity:
                                               _isPlacingOrder
@@ -641,15 +692,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               color: Colors.white,
                                               border: Border.all(
                                                 color:
-                                                    _selectedPaymentMethod
-                                                                ?.id ==
-                                                            method.id
+                                                    isMethodSelected
                                                         ? Color(0xFFBC132C)
                                                         : Colors.grey.shade300,
                                                 width:
-                                                    _selectedPaymentMethod
-                                                                ?.id ==
-                                                            method.id
+                                                    isMethodSelected
                                                         ? 1.5
                                                         : 1.0,
                                               ),
@@ -660,9 +707,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                               leading: Icon(
                                                 method.icon,
                                                 color:
-                                                    _selectedPaymentMethod
-                                                                ?.id ==
-                                                            method.id
+                                                    isMethodSelected
                                                         ? Color(0xFFBC132C)
                                                         : Colors.grey[700],
                                               ),
@@ -670,9 +715,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                 method.title,
                                                 style: TextStyle(
                                                   fontWeight:
-                                                      _selectedPaymentMethod
-                                                                  ?.id ==
-                                                              method.id
+                                                      isMethodSelected
                                                           ? FontWeight.bold
                                                           : FontWeight.normal,
                                                 ),
@@ -691,6 +734,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                           setState(() {
                                                             _selectedPaymentMethod =
                                                                 value;
+                                                            _cardNumberController.clear();
+                                                            _cardExpiryController.clear();
+                                                            _cardCvcController.clear();
                                                           });
                                                         },
                                                 activeColor: Color(0xFFBC132C),
@@ -702,11 +748,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                                         setState(() {
                                                           _selectedPaymentMethod =
                                                               method;
+                                                          _cardNumberController.clear();
+                                                          _cardExpiryController.clear();
+                                                          _cardCvcController.clear();
                                                         });
                                                       },
                                               selected:
-                                                  _selectedPaymentMethod?.id ==
-                                                  method.id,
+                                                  isMethodSelected,
                                               selectedTileColor: Color(0xFFBC132C)
                                                   .withOpacity(0.05),
                                             ),
@@ -714,6 +762,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         );
                                       }).toList(),
                                 )),
+                        if (_selectedPaymentMethod?.id == 'card')
+                          _buildCardPaymentForm(),
                       ],
                     ),
                   ),
@@ -748,6 +798,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                     ),
                                   ),
                                 );
+                                return;
+                              }
+                              // NEW: Xác thực form thẻ trước khi hiển thị dialog xác nhận
+                              if (!_validateCardForm()) {
                                 return;
                               }
                               showDialog(

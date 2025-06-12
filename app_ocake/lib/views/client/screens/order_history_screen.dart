@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/foundation.dart'; // Để sử dụng mapEquals
-
+import 'package:flutter/foundation.dart';
 import 'package:app_ocake/models/order.dart';
 import 'package:app_ocake/models/order_detail_item.dart';
 import 'order_history_detail_screen.dart';
@@ -70,8 +69,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
     if (_currentCustomerIdFromSession != null) {
       print("OrderHistoryScreen: Customer ID from Session: $_currentCustomerIdFromSession");
-      // Không gán _ordersStream trực tiếp ở đây, mà dùng getter _filteredOrdersStream
-      // setState để đảm bảo StreamBuilder được rebuild khi _currentCustomerIdFromSession thay đổi
       setState(() {
         _currentFilterStatus = null; // Đặt bộ lọc mặc định là 'Tất cả'
         _currentFilterLabel = 'Tất cả';
